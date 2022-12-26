@@ -21,13 +21,6 @@ public interface SwerveWheel {
      */
     public Translation2d getPosition();
 
-    /**
-     * Sets the max speeds for the drive motor and the spin motor
-     * @param driveSpeed Max speed of the drive motor
-     * @param spinSpeed Max speed of the spin motor 
-     */
-    public void setMaxSpeeds(double driveSpeed, double spinSpeed);
-
     // Driving //
 
     /**

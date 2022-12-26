@@ -38,20 +38,14 @@ public class SwerveWheel_FN implements SwerveWheel {
     // Targets
     private double targetSpeed = 0.0;
 
-    // Speeds
-    private double maxSpinSpeed = 1.0;
+    // Speeds (Absolute fail-safe max speeds, not for speed control [use SwerveBase max speed instead])
     private double maxDriveSpeed = 100.0;
+    private double maxSpinSpeed = 1.0;
 
     // Real-World Measurements
     private static double kMETERS_PER_ROTATION = 0.1; // Number of meters traveled for each rotation of the DRIVE motor
     private static double kDEGREES_PER_ROTATION = 0.2; // Number of degrees rotated for each rotation of the SPIN motor
 
-    @Override
-    public void setMaxSpeeds(double driveSpeed, double spinSpeed) {
-        maxDriveSpeed = driveSpeed; // RPMs
-        maxSpinSpeed = spinSpeed; // Percentage, -1.0 to 1.0
-    }
-    
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.
      * Both should communicate over CAN bus.

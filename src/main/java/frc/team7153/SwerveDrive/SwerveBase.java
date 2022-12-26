@@ -20,6 +20,10 @@ public class SwerveBase extends SubsystemBase {
 
     // State
     private boolean periodicRunning = true;
+
+    // Max Speeds
+    private double maxDriveSpeed = 100.0;
+    private double maxSpinSpeed = 10.0;
     
     /**
      * Creates a new SwerveBase, with four SwerveWheels.
@@ -39,14 +43,12 @@ public class SwerveBase extends SubsystemBase {
 
     /**
      * Sets the max speed for all the wheels. See the specific classes for units.
-     * @param driveSpeed Max speed of the drive motor
-     * @param spinSpeed Max speed of the spin motor
+     * @param driveSpeed Max speed of driving (Meters/Second)
+     * @param spinSpeed Max speed of spin (Degrees/Second)
      */
     public void setMaxSpeed(double driveSpeed, double spinSpeed) {
-        fl.setMaxSpeeds(driveSpeed, spinSpeed);
-        fr.setMaxSpeeds(driveSpeed, spinSpeed);
-        rl.setMaxSpeeds(driveSpeed, spinSpeed);
-        rr.setMaxSpeeds(driveSpeed, spinSpeed);
+        maxDriveSpeed = driveSpeed;
+        maxSpinSpeed = spinSpeed;
     }
 
     /**
@@ -55,7 +57,7 @@ public class SwerveBase extends SubsystemBase {
      * @param x left/right speed (meters per second)
      * @param r rotation speed (degrees per second)
      */
-    public void drive(double y, double x, double r) {
+    public void driveAbsolute(double y, double x, double r) {
         ChassisSpeeds speed = new ChassisSpeeds(y, x, -SwerveMathUtils.degreesToRadians(r));
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
 
@@ -67,13 +69,21 @@ public class SwerveBase extends SubsystemBase {
     }
 
     /**
+     * Drives the robot, using a percentage for speed
+     * @param y forward/backward speed (percentage of max drive speed)
+     * @param x left/right speed (percentage of max drive speed)
+     * @param r rotation speed (percentage of max spin speed)
+     */
+    public void drive(double y, double x, double r) { driveAbsolute(y*maxDriveSpeed, x*maxDriveSpeed, r*maxSpinSpeed); }
+
+    /**
      * Drives the robot, with field-oriented drive
      * @param y forward/backward speed (meters per second)
      * @param x left/right speed (meters per second)
      * @param r rotation speed (degrees per second)
      * @param deg current angle of the robot (degrees)
      */
-    public void driveFieldOriented(double y, double x, double r, double deg) {
+    public void driveFieldOrientedAbsolute(double y, double x, double r, double deg) {
         ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(
             y, x, 
             -SwerveMathUtils.degreesToRadians(r), 
@@ -89,12 +99,21 @@ public class SwerveBase extends SubsystemBase {
     }
 
     /**
-     * Orbits the robot around a point
+     * Drives the robot, with field-oriented drive, using a percentage for speed
+     * @param y forward/backward speed (percentage of max drive speed)
+     * @param x left/right speed (percentage of max drive speed)
+     * @param r rotation (percentage of max spin speed)
+     * @param deg current angle of the robot (degrees)
+     */
+    public void driveFieldOriented(double y, double x, double r, double deg) { driveFieldOrientedAbsolute(y*maxDriveSpeed, x*maxDriveSpeed, r*maxSpinSpeed, deg); }
+
+    /**
+     * Orbits the robot around a point. There is no non-absolute implementation of this yet.
      * @param rotation The speed, in degrees per second
      * @param centerX The X position of the center of rotation, relative to the robot's base (meters)
      * @param centerY The Y position of the center of rotation, relative to the robot's base (meters)
      */
-    public void orbit(double rotation, double centerX, double centerY) {
+    public void orbitAbsolute(double rotation, double centerX, double centerY) {
         ChassisSpeeds speed = new ChassisSpeeds(0.0, 0.0, -SwerveMathUtils.degreesToRadians(rotation));
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed, new Translation2d(centerX, centerY));
 
@@ -110,7 +129,7 @@ public class SwerveBase extends SubsystemBase {
      * @param left The speed of the left side of the robot (meters/second)
      * @param right The speed of the right side of the robot (meters/second)
      */
-    public void tankDrive(double left, double right) {
+    public void tankDriveAbsolute(double left, double right) {
         fl.set(0.0, left);
         rl.set(0.0, left);
         fr.set(0.0, right);
@@ -118,6 +137,13 @@ public class SwerveBase extends SubsystemBase {
 
         periodicRunning = true;
     }
+
+    /**
+     * Drives the robot like its a tank drive base, using percentages for speed
+     * @param left The speed of the left side of the robot (percentage of max drive speed)
+     * @param right The speed of the right side of the robot (percentage of max drive speed)
+     */
+    public void tankDrive(double left, double right) { tankDriveAbsolute(left*maxDriveSpeed, right*maxDriveSpeed); }
 
     /**
      * Stops the robot
