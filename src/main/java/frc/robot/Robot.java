@@ -5,7 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.team7153.SwerveDrive.SwerveWheel;
 
 public class Robot extends TimedRobot {
   @Override

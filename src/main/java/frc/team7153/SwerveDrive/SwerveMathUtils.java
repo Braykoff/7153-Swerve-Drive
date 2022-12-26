@@ -37,7 +37,7 @@ public class SwerveMathUtils {
      * @param velocity
      * @return RPMs
      */
-    public static double Falcon500VelocityToRPM(double velocity) { return velocity / 2048 / 0.1; }
+    public static double falcon500VelocityToRPM(double velocity) { return velocity / 2048 / 0.1; }
 
     /**
      * Convert degrees to radians

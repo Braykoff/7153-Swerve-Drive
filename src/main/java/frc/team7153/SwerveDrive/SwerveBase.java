@@ -34,7 +34,19 @@ public class SwerveBase extends SubsystemBase {
         rl = rearLeft;
         rr = rearRight;
 
-        kinematics = new SwerveDriveKinematics(fl.pos, fr.pos, rl.pos, rr.pos);
+        kinematics = new SwerveDriveKinematics(fl.getPosition(), fr.getPosition(), rl.getPosition(), rr.getPosition());
+    }
+
+    /**
+     * Sets the max speed for all the wheels. See the specific classes for units.
+     * @param driveSpeed Max speed of the drive motor
+     * @param spinSpeed Max speed of the spin motor
+     */
+    public void setMaxSpeed(double driveSpeed, double spinSpeed) {
+        fl.setMaxSpeeds(driveSpeed, spinSpeed);
+        fr.setMaxSpeeds(driveSpeed, spinSpeed);
+        rl.setMaxSpeeds(driveSpeed, spinSpeed);
+        rr.setMaxSpeeds(driveSpeed, spinSpeed);
     }
 
     /**
@@ -99,7 +111,7 @@ public class SwerveBase extends SubsystemBase {
      * @param right The speed of the right side of the robot (meters/second)
      */
     public void tankDrive(double left, double right) {
-        fl.set(0.0, left); // TODO: convert
+        fl.set(0.0, left);
         rl.set(0.0, left);
         fr.set(0.0, right);
         rr.set(0.0, right);
