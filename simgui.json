@@ -1,0 +1,35 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/SwerveBase": "Subsystem",
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler"
+    }
+  },
+  "NetworkTables": {
+    "Shuffleboard": {
+      ".metadata": {
+        "Swerve Sim": {
+          "Wheel (-0.3, -0.4)": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      },
+      "Swerve Sim": {
+        "Wheel (-0.3, -0.4)": {
+          "open": true
+        },
+        "Wheel (0.3, -0.4)": {
+          "open": true
+        },
+        "Wheel 1": {
+          "open": true
+        },
+        "open": true
+      },
+      "open": true
+    }
+  }
+}

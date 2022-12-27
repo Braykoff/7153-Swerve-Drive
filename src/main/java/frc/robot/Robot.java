@@ -11,10 +11,15 @@ import frc.team7153.SwerveDrive.SwerveBase;
 import frc.team7153.SwerveDrive.WheelTypes.*;
 public class Robot extends TimedRobot {
   // Swerve Wheels
-  private SwerveWheel_FN fl = new SwerveWheel_FN(1, 2, -0.3, 0.4);
+  /*private SwerveWheel_FN fl = new SwerveWheel_FN(1, 2, -0.3, 0.4);
   private SwerveWheel_FN fr = new SwerveWheel_FN(3, 4, 0.3, 0.4);
   private SwerveWheel_FN rl = new SwerveWheel_FN(5, 6, -0.3, -0.4);
-  private SwerveWheel_FN rr = new SwerveWheel_FN(7, 8, 0.3, -0.4);
+  private SwerveWheel_FN rr = new SwerveWheel_FN(7, 8, 0.3, -0.4);*/
+
+  private SwerveWheel_Sim fl = new SwerveWheel_Sim("Swerve Sim", 1, -0.3, 0.4);
+  private SwerveWheel_Sim fr = new SwerveWheel_Sim("Swerve Sim", 2, 0.3, 0.4);
+  private SwerveWheel_Sim rl = new SwerveWheel_Sim("Swerve Sim", 3, -0.3, -0.4);
+  private SwerveWheel_Sim rr = new SwerveWheel_Sim("Swerve Sim", 4, 0.3, -0.4);
 
   // Swerve Base
   private SwerveBase base = new SwerveBase(fl, fr, rl, rr);
