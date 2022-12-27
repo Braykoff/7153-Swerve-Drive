@@ -48,14 +48,13 @@ public class SwerveWheel_Sim implements SwerveWheel {
         ShuffleboardTab tab = Shuffleboard.getTab(shuffleboardTabName);
         ShuffleboardLayout column = tab.getLayout(String.format("Wheel %s", shuffleboardColumn), BuiltInLayouts.kList)
             .withPosition(shuffleboardColumn, 0)
-            .withSize(1, 3)
+            .withSize(1, 4)
             .withProperties(Map.of("Label position", "TOP"));
 
         shuffle_speed = column.add("Speed", 0.0)
             .getEntry();
         
         shuffle_angle = column.add("Angle", 0.0)
-            .withWidget(BuiltInWidgets.kGyro)
             .getEntry();
         
         shuffle_updates = column.add("Number of Updates", 0)
@@ -71,6 +70,8 @@ public class SwerveWheel_Sim implements SwerveWheel {
         
         shuffle_angleAdjust = column.add("Angle Adjust", 0.0)
             .getEntry();
+        
+        periodic();
     }
 
     // Config
