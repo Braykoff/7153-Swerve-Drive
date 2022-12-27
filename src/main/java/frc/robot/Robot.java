@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.team7153.SwerveDrive.SwerveBase;
 import frc.team7153.SwerveDrive.WheelTypes.*;
+
 public class Robot extends TimedRobot {
   // Swerve Wheels (Actual)
   private SwerveWheel_FN fl = new SwerveWheel_FN(1, 2, -0.3, 0.4);
@@ -51,7 +52,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    // Note: Joysticks return percentages, drive is measured in Meters/second
     base.drive(joy1.getY(), joy1.getX(), joy1.getTwist());
   }
 
