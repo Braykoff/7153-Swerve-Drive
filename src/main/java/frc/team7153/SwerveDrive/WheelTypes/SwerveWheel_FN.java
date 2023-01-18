@@ -44,7 +44,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     // Real-World Measurements
     private static double kMETERS_PER_ROTATION = 0.1; // Number of meters traveled for each rotation of the DRIVE motor
-    private static double kDEGREES_PER_ROTATION = 0.2; // Number of degrees rotated for each rotation of the SPIN motor
+    private static double kDEGREES_PER_ROTATION = 360; // Number of degrees rotated for each rotation of the SPIN motor
 
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.

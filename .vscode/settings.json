@@ -25,8 +25,5 @@
       }
     },
   ],
-  "java.test.defaultConfig": "WPIlibUnitTests",
-  "cSpell.words": [
-    "WPI's"
-  ]
+  "java.test.defaultConfig": "WPIlibUnitTests"
 }
