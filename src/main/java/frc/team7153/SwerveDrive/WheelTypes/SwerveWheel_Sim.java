@@ -4,7 +4,7 @@ import java.util.Map;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -27,12 +27,12 @@ public class SwerveWheel_Sim implements SwerveWheel {
     private Translation2d pos;
 
     // Shuffleboard
-    private NetworkTableEntry shuffle_speed;
-    private NetworkTableEntry shuffle_angle;
-    private NetworkTableEntry shuffle_updates;
-    private NetworkTableEntry shuffle_driveInvert;
-    private NetworkTableEntry shuffle_angleInvert;
-    private NetworkTableEntry shuffle_angleAdjust;
+    private GenericPublisher shuffle_speed;
+    private GenericPublisher shuffle_angle;
+    private GenericPublisher shuffle_updates;
+    private GenericPublisher shuffle_driveInvert;
+    private GenericPublisher shuffle_angleInvert;
+    private GenericPublisher shuffle_angleAdjust;
 
     // Constructor
     /**
@@ -50,7 +50,7 @@ public class SwerveWheel_Sim implements SwerveWheel {
             .withPosition(shuffleboardColumn, 0)
             .withSize(1, 4)
             .withProperties(Map.of("Label position", "TOP"));
-
+        
         shuffle_speed = column.add("Speed", 0.0)
             .getEntry();
         
@@ -105,7 +105,7 @@ public class SwerveWheel_Sim implements SwerveWheel {
 
         shuffle_speed.setDouble(currentSpeed);
         shuffle_angle.setDouble(currentAngle);
-        shuffle_updates.setNumber(updates);
+        shuffle_updates.setInteger(updates);
         shuffle_driveInvert.setBoolean(configDriveInvert);
         shuffle_angleInvert.setBoolean(configSpinInvert);
         shuffle_angleAdjust.setDouble(configAngleAdjust);
