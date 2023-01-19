@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,7 +13,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import frc.team7153.SwerveDrive.SwerveMathUtils;
-import frc.team7153.SwerveDrive.SwerveWheel;
 
 /**
  * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (With CAN Spark Max) for spin motor
@@ -22,9 +22,10 @@ public class SwerveWheel_FN implements SwerveWheel {
     private TalonFX driveWheel;
     private CANSparkMax spinWheel;
 
-    private RelativeEncoder spinEncoder;
+    private CANcoderFeedback spinEncoder;
+    private SparkMaxPIDController spinPID;
 
-    private PIDController spinPID = new PIDController(0, 0, 0);
+    //private PIDController spinPID = new PIDController(0, 0, 0);
 
     // Position
     private Translation2d pos;
@@ -58,6 +59,9 @@ public class SwerveWheel_FN implements SwerveWheel {
     public SwerveWheel_FN(int drive, int spin, double x, double y) {
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
+
+        spinPID = spinWheel.getPIDController();
+        spinPID.setFeedbackDevice();
 
         spinEncoder = spinWheel.getEncoder();
 
