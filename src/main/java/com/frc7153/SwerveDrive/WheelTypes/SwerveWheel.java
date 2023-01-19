@@ -1,4 +1,4 @@
-package frc.team7153.SwerveDrive.WheelTypes;
+package com.frc7153.SwerveDrive.WheelTypes;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;

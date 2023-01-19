@@ -1,4 +1,4 @@
-package frc.team7153.SwerveDrive.WheelTypes;
+package com.frc7153.SwerveDrive.WheelTypes;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package frc.team7153.SwerveDrive.WheelTypes;
+package com.frc7153.SwerveDrive.WheelTypes;
 
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
@@ -12,7 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-import frc.team7153.SwerveDrive.SwerveMathUtils;
+import com.frc7153.SwerveDrive.SwerveMathUtils;
 
 /**
  * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (With CAN Spark Max) for spin motor
