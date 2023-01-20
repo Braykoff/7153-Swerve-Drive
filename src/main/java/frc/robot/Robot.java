@@ -4,21 +4,21 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import com.frc7153.SwerveDrive.SwerveBase;
 import com.frc7153.SwerveDrive.WheelTypes.*;
 
 public class Robot extends TimedRobot {
-  // Swerve Wheels (Actual)
-  private SwerveWheel_FN fl = new SwerveWheel_FN(3, 7, -0.3, 0.4);
-  private SwerveWheel_FN fr = new SwerveWheel_FN(4, 8, 0.3, 0.4);
-  private SwerveWheel_FN rl = new SwerveWheel_FN(5, 9, -0.3, -0.4);
-  private SwerveWheel_FN rr = new SwerveWheel_FN(6, 10, 0.3, -0.4);
+  // Swerve Wheels (spin, drive, abs encoder, posx, posy, absHomeLoc)
+  // Height: 30.5 in (0.77 m), width: 20 in (0.51 m)
+  private SwerveWheel_FN fl = new SwerveWheel_FN(8, 4, 12, -0.255, 0.385, 177.539);
+  private SwerveWheel_FN fr = new SwerveWheel_FN(7, 3, 11, 0.255, 0.385, 179.033);
+  private SwerveWheel_FN rl = new SwerveWheel_FN(10, 6, 14, -0.255, -0.385 , 6.855);
+  private SwerveWheel_FN rr = new SwerveWheel_FN(9, 5, 13, 0.255, -0.385, 15.908);
 
-  // Swerve Base
-  //private SwerveBase base = new SwerveBase(fl, fr, rl, rr);
+  private SwerveBase base = new SwerveBase(fl, fr, rl, rr);
 
   // Controller
   private Joystick joy1 = new Joystick(0);
@@ -30,28 +30,28 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run();
+    //CommandScheduler.getInstance().run();
     // OR:
-    //base.periodic();
+    base.periodic();
   }
 
   @Override
-  public void autonomousInit() {}
+  public void autonomousInit() {
+    //base.setAngle(90.0);
+  }
 
   @Override
   public void autonomousPeriodic() {}
 
   @Override
-  public void teleopInit() {}
-
-  @Override
   public void teleopPeriodic() {
-    //base.drive(joy1.getY(), joy1.getX(), joy1.getTwist());
-    if (joy1.getTrigger()) {
-      fl.setAngle(180);
-    } else {
-      fl.setAngle(0);
-    }
+    //base.setAngle(0.0);
+    double sp = joy1.getThrottle();
+    sp += 1.0;
+    sp /= 2.0;
+    sp *= 360;
+    base.setAngle(sp);
+    DriverStation.reportWarning(String.format("Setpoint is -> %s", sp), false);
   }
 
   @Override

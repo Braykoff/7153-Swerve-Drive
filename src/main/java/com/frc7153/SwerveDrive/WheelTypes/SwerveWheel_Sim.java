@@ -20,7 +20,6 @@ public class SwerveWheel_Sim implements SwerveWheel {
     // Config
     private boolean configDriveInvert = false;
     private boolean configSpinInvert = false;
-    private double configAngleAdjust = 0.0;
 
     // Position
     private Translation2d pos;
@@ -31,7 +30,6 @@ public class SwerveWheel_Sim implements SwerveWheel {
     private GenericPublisher shuffle_updates;
     private GenericPublisher shuffle_driveInvert;
     private GenericPublisher shuffle_angleInvert;
-    private GenericPublisher shuffle_angleAdjust;
 
     // Constructor
     /**
@@ -67,18 +65,14 @@ public class SwerveWheel_Sim implements SwerveWheel {
             .withWidget(BuiltInWidgets.kBooleanBox)
             .getEntry();
         
-        shuffle_angleAdjust = column.add("Angle Adjust", 0.0)
-            .getEntry();
-        
         periodic();
     }
 
     // Config
     @Override
-    public void config(boolean driveInverted, boolean spinInverted, double angleAdjust) {
+    public void config(boolean driveInverted, boolean spinInverted) {
         configDriveInvert = driveInverted;
         configSpinInvert = spinInverted;
-        configAngleAdjust = angleAdjust;
     }
 
     // Position
@@ -107,7 +101,8 @@ public class SwerveWheel_Sim implements SwerveWheel {
         shuffle_updates.setInteger(updates);
         shuffle_driveInvert.setBoolean(configDriveInvert);
         shuffle_angleInvert.setBoolean(configSpinInvert);
-        shuffle_angleAdjust.setDouble(configAngleAdjust);
     }
-    
+
+    @Override
+    public void shuffleboardUpdate() {}
 }

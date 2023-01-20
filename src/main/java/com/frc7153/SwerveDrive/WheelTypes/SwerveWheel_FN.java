@@ -1,18 +1,19 @@
 package com.frc7153.SwerveDrive.WheelTypes;
 
-import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.ControlType;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
 import com.frc7153.SwerveDrive.SwerveMathUtils;
 
@@ -26,7 +27,13 @@ public class SwerveWheel_FN implements SwerveWheel {
     private CANSparkMax spinWheel;
 
     private RelativeEncoder spinRelEncoder;
+    private CANCoder spinAbsEncoder;
     private SparkMaxPIDController spinPID;
+
+    // PID Coefficients
+    private static double spin_kP = 0.012013;
+    private static double spin_kI = 0.0;
+    private static double spin_kD = 0.00013784;
 
     // Position
     private Translation2d pos;
@@ -35,18 +42,13 @@ public class SwerveWheel_FN implements SwerveWheel {
     public Translation2d getPosition() { return pos; }
 
     // Config
-    private double relAngleOffset;
+    private double absAngleOffset;
 
-    // Targets
-    private double targetSpeed = 0.0;
-
-    // Speeds (Absolute fail-safe max speeds, not for speed control [use SwerveBase max speed instead])
-    private double maxDriveSpeed = 100.0;
-    private double maxSpinSpeed = 1.0;
-
-    // Real-World Measurements
-    private static double kMETERS_PER_ROTATION = 0.1; // Number of meters traveled for each rotation of the DRIVE motor
-    private static double kDEGREES_PER_ROTATION = 360; // Number of degrees rotated for each rotation of the SPIN motor
+    // Shuffleboard
+    private GenericEntry shuffle_abs;
+    private GenericEntry shuffle_rel;
+    private GenericEntry shuffle_absPos;
+    private GenericEntry shuffle_relPos;
 
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.
@@ -59,19 +61,25 @@ public class SwerveWheel_FN implements SwerveWheel {
      * @param y The y position of the wheel, relative to the center of the base, in meters
      * @param spinHomeLocation When the wheel's direction is 0 degrees (forward), what is the output of the ABSOLUTE encoder (degrees)?
      */
-    public SwerveWheel_FN(int drive, int spin, int canCoder, double x, double y, double spinHomeLocation) {
+    public SwerveWheel_FN(int spin, int drive, int canCoder, double x, double y, double spinHomeLocation) {
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
 
-        CANCoder spinAbsEncoder = new CANCoder(canCoder);
+        spinAbsEncoder = new CANCoder(canCoder);
         spinRelEncoder = spinWheel.getEncoder();
+        spinRelEncoder.setPosition(0.0);
 
-        relAngleOffset = SwerveMathUtils.normalizeAngle(spinHomeLocation - spinAbsEncoder.getPosition()); // TODO: this is wrong
+        absAngleOffset = (spinAbsEncoder.getAbsolutePosition() - spinHomeLocation);
 
         spinPID = spinWheel.getPIDController();
 
-        //TODO: implement
-        spinPID.setP(0.1);
+        // Config CAN Spark Max
+        spinWheel.setSmartCurrentLimit(40);
+
+        spinPID.setP(spin_kP, 0);
+        spinPID.setI(spin_kI, 0);
+        spinPID.setD(spin_kD, 0);
+        spinPID.setOutputRange(-10.0, 10.0);
 
         /*
          * The X and Y values are implemented in WPI's library oddly:
@@ -82,9 +90,26 @@ public class SwerveWheel_FN implements SwerveWheel {
          * See https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html 
          */
         pos = new Translation2d(y, -x);
+
+        // Shuffleboard
+        ShuffleboardTab tab = Shuffleboard.getTab("Swerve Drive Output");
+
+        shuffle_abs = tab.add(String.format("Absolute Encoder (%s)", canCoder), spinAbsEncoder.getAbsolutePosition())
+            .getEntry();
+        
+        shuffle_rel = tab.add(String.format("Relative Encoder (%s)", spin), spinRelEncoder.getPosition())
+            .getEntry();
+        
+        shuffle_relPos = tab.add(String.format("Rel Enc Pos (%s)", spin), -1.0)
+            .getEntry();
+        
+        shuffle_absPos = tab.add(String.format("Abs Enc Pos (%s)", canCoder), -1.0)
+            .getEntry();
+        
+        tab.add(String.format("Abs Angle Offset (%s)", spin), absAngleOffset);
     }
 
-    // Config
+    // Config (Not implemented, will be done later) TODO
     @Override
     public void config(boolean driveInverted, boolean spinInverted) {
         driveWheel.setInverted(driveInverted);
@@ -95,19 +120,21 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     // Get Angle from Encoder (degrees)
     private double getAngle() {
-        return SwerveMathUtils.normalizeAngle(spinRelEncoder.getPosition()*360 - relAngleOffset);
+        return (spinRelEncoder.getPosition() * 360.0 * (7.0/150.0) + absAngleOffset);
     }
 
     // Set Speeds
     @Override
     public void setAngle(double angle) {
-        angle = SwerveMathUtils.normalizeAngle(angle - relAngleOffset);
-        spinWheel.
+        //angle = SwerveMathUtils.normalizeAngle(angle - absAngleOffset);
+        angle = angle - absAngleOffset;
+        angle = angle * (150.0/7.0) * (1.0/360.0);
+        spinPID.setReference(angle, ControlType.kPosition, 0);
     }
 
     @Override
     public void setSpeed(double speed) {
-        targetSpeed = (speed*60)/kMETERS_PER_ROTATION;
+
     }
 
     @Override
@@ -120,6 +147,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     }
 
     // Periodic
+    /*
     @Override
     public void periodic() {
         spinWheel.set(
@@ -136,5 +164,16 @@ public class SwerveWheel_FN implements SwerveWheel {
                 maxDriveSpeed
             )
         ));
+    }*/
+    public void periodic() {}
+
+    // Shuffleboard
+    @Override
+    public void shuffleboardUpdate() {
+        shuffle_abs.setDouble(spinAbsEncoder.getAbsolutePosition());
+        shuffle_rel.setDouble(spinRelEncoder.getPosition());
+
+        shuffle_absPos.setDouble(spinAbsEncoder.getAbsolutePosition() - absAngleOffset);
+        shuffle_relPos.setDouble(getAngle());
     }
 }

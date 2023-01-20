@@ -56,4 +56,9 @@ public interface SwerveWheel {
      * Needs to be called periodically to update PID loops
      */
     public void periodic();
+
+    /**
+     * Runs periodically to push values to Shuffleboard
+     */
+    public void shuffleboardUpdate();
 }

@@ -147,6 +147,18 @@ public class SwerveBase extends SubsystemBase {
     public void tankDrive(double left, double right) { tankDriveAbsolute(left*maxDriveSpeed, right*maxDriveSpeed); }
 
     /**
+     * Sets all the motors to a specific angle (for testing usually).
+     * Will stop the drive wheel.
+     * @param angle in degrees
+     */
+    public void setAngle(double angle) {
+        fl.set(angle, 0.0);
+        fr.set(angle, 0.0);
+        rl.set(angle, 0.0);
+        rr.set(angle, 0.0);
+    }
+    
+    /**
      * Stops the robot
      * @param reset Whether the wheels should return to a forward position
      */
@@ -177,11 +189,15 @@ public class SwerveBase extends SubsystemBase {
     // Periodic
     @Override
     public void periodic() {
-        if (!DriverStation.isDisabled() && periodicRunning) {
+        /*if (!DriverStation.isDisabled() && periodicRunning) {
             fl.periodic();
             fr.periodic();
             rl.periodic();
             rr.periodic();
-        }
+        }*/
+        fl.shuffleboardUpdate();
+        fr.shuffleboardUpdate();
+        rl.shuffleboardUpdate();
+        rr.shuffleboardUpdate();
     }
 }
