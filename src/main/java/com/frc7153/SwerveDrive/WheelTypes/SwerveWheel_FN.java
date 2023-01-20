@@ -2,6 +2,7 @@ package com.frc7153.SwerveDrive.WheelTypes;
 
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -11,21 +12,21 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
 import com.frc7153.SwerveDrive.SwerveMathUtils;
 
 /**
- * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (With CAN Spark Max) for spin motor
+ * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (with CAN Spark Max) for spin motor.
+ * Uses CANCoder absolute encoder for absolute position.
  */
 public class SwerveWheel_FN implements SwerveWheel {
     // Motors, Encoders, PID
     private TalonFX driveWheel;
     private CANSparkMax spinWheel;
 
-    private CANcoderFeedback spinEncoder;
+    private RelativeEncoder spinRelEncoder;
     private SparkMaxPIDController spinPID;
-
-    //private PIDController spinPID = new PIDController(0, 0, 0);
 
     // Position
     private Translation2d pos;
@@ -34,7 +35,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     public Translation2d getPosition() { return pos; }
 
     // Config
-    private double angleOffset = 0.0;
+    private double relAngleOffset;
 
     // Targets
     private double targetSpeed = 0.0;
@@ -53,17 +54,24 @@ public class SwerveWheel_FN implements SwerveWheel {
      * 
      * @param drive The CAN id of the drive wheel (Falcon500)
      * @param spin The CAN id of the spin wheel (Rev Brushless NEO)
+     * @param canCoder The CAN id of the CANCoder
      * @param x The x position of the wheel, relative to the center of the base, in meters
      * @param y The y position of the wheel, relative to the center of the base, in meters
+     * @param spinHomeLocation When the wheel's direction is 0 degrees (forward), what is the output of the ABSOLUTE encoder (degrees)?
      */
-    public SwerveWheel_FN(int drive, int spin, double x, double y) {
+    public SwerveWheel_FN(int drive, int spin, int canCoder, double x, double y, double spinHomeLocation) {
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
 
-        spinPID = spinWheel.getPIDController();
-        spinPID.setFeedbackDevice();
+        CANCoder spinAbsEncoder = new CANCoder(canCoder);
+        spinRelEncoder = spinWheel.getEncoder();
 
-        spinEncoder = spinWheel.getEncoder();
+        relAngleOffset = SwerveMathUtils.normalizeAngle(spinHomeLocation - spinAbsEncoder.getPosition()); // TODO: this is wrong
+
+        spinPID = spinWheel.getPIDController();
+
+        //TODO: implement
+        spinPID.setP(0.1);
 
         /*
          * The X and Y values are implemented in WPI's library oddly:
@@ -74,29 +82,27 @@ public class SwerveWheel_FN implements SwerveWheel {
          * See https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html 
          */
         pos = new Translation2d(y, -x);
-
-        spinPID.enableContinuousInput(0.0, 360.0);
     }
 
     // Config
     @Override
-    public void config(boolean driveInverted, boolean spinInverted, double angleAdjust) {
+    public void config(boolean driveInverted, boolean spinInverted) {
         driveWheel.setInverted(driveInverted);
         spinWheel.setInverted(spinInverted);
-        angleOffset = angleAdjust;
+
+        spinRelEncoder.setInverted(spinInverted);
     }
 
-    // Get Angle from Encoder
+    // Get Angle from Encoder (degrees)
     private double getAngle() {
-        return SwerveMathUtils.normalizeAngle(spinEncoder.getPosition() * kDEGREES_PER_ROTATION);
+        return SwerveMathUtils.normalizeAngle(spinRelEncoder.getPosition()*360 - relAngleOffset);
     }
 
     // Set Speeds
     @Override
     public void setAngle(double angle) {
-        angle = SwerveMathUtils.normalizeAngle(angle + angleOffset);
-
-        spinPID.setSetpoint(angle);
+        angle = SwerveMathUtils.normalizeAngle(angle - relAngleOffset);
+        spinWheel.
     }
 
     @Override
