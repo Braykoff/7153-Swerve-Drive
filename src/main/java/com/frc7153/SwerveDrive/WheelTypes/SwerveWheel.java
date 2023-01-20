@@ -11,9 +11,8 @@ public interface SwerveWheel {
      * because it will not update already set speeds or angles.
      * @param driveInverted Whether the drive motor needs to be inverted (false by default)
      * @param spinInverted Whether the spin motor needs to be inverted (false by default)
-     * @param angleAdjust A double added to each angle (0 by default), after it is inverted
      */
-    public void config(boolean driveInverted, boolean spinInverted, double angleAdjust);
+    public void config(boolean driveInverted, boolean spinInverted);
 
     /**
      * Gets the position of the wheel, relative to the center of the robot

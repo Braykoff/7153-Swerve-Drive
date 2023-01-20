@@ -7,11 +7,7 @@ public class SwerveMathUtils {
      * @return The angle, normalized
      */
     public static double normalizeAngle(double angle) {
-        if (angle > 360) {
-            return angle - (Math.floor(angle/360)*360);
-        } else if (angle < 0) {
-            return angle + (Math.ceil(Math.abs(angle/360))*360);
-        } else { return angle; }
+        return angle % 360.0;
     }
 
     /**
