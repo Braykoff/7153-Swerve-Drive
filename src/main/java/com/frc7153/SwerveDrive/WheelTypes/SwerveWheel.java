@@ -5,15 +5,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public interface SwerveWheel {
     // Configs //
-
-    /**
-     * Sets configuration for the wheel. This should be called as soon as the robot starts,
-     * because it will not update already set speeds or angles.
-     * @param driveInverted Whether the drive motor needs to be inverted (false by default)
-     * @param spinInverted Whether the spin motor needs to be inverted (false by default)
-     */
-    public void config(boolean driveInverted, boolean spinInverted);
-
+    
     /**
      * Gets the position of the wheel, relative to the center of the robot
      * @return The position, in meters
@@ -23,7 +15,7 @@ public interface SwerveWheel {
     // Driving //
 
     /**
-     * Sets the angle of the wheel, from 0 - 360, with 0 degrees the front of the robot. 
+     * Sets the angle of the wheel, from -180 to 180, with 0 degrees the front of the robot. 
      * @param angle
      */
     public void setAngle(double angle);

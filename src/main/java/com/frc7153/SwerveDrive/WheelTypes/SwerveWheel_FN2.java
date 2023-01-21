@@ -1,6 +1,7 @@
 package com.frc7153.SwerveDrive.WheelTypes;
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -12,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
@@ -21,7 +23,9 @@ import com.frc7153.SwerveDrive.SwerveMathUtils;
  * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (with CAN Spark Max) for spin motor.
  * Uses CANCoder absolute encoder for absolute position.
  */
-public class SwerveWheel_FN implements SwerveWheel {
+public class SwerveWheel_FN2 implements SwerveWheel {
+    private static final double k_SPIN_RATIO = -150.0/ 7.0;
+    
     // Motors, Encoders, PID
     private TalonFX driveWheel;
     private CANSparkMax spinWheel;
@@ -42,13 +46,11 @@ public class SwerveWheel_FN implements SwerveWheel {
     public Translation2d getPosition() { return pos; }
 
     // Config
-    private double absAngleOffset;
+    private double REL_ENCODER_OFFSET = 0.0;
 
     // Shuffleboard
     private GenericEntry shuffle_abs;
     private GenericEntry shuffle_rel;
-    private GenericEntry shuffle_absPos;
-    private GenericEntry shuffle_relPos;
 
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.
@@ -61,20 +63,23 @@ public class SwerveWheel_FN implements SwerveWheel {
      * @param y The y position of the wheel, relative to the center of the base, in meters
      * @param spinHomeLocation When the wheel's direction is 0 degrees (forward), what is the output of the ABSOLUTE encoder (degrees)?
      */
-    public SwerveWheel_FN(int spin, int drive, int canCoder, double x, double y, double spinHomeLocation) {
+    public SwerveWheel_FN2(int spin, int drive, int canCoder, double x, double y, double spinHomeLocation) {
+        // Establish and Configure Objects
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
 
         spinAbsEncoder = new CANCoder(canCoder);
         spinRelEncoder = spinWheel.getEncoder();
-        spinRelEncoder.setPosition(0.0);
-
-        absAngleOffset = (spinAbsEncoder.getAbsolutePosition() - spinHomeLocation);
-
-        spinPID = spinWheel.getPIDController();
-
-        // Config CAN Spark Max
+        
         spinWheel.setSmartCurrentLimit(40);
+        spinAbsEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+
+        // Determine Relative Encoder Offset
+        double relEncPos = 360.0 / k_SPIN_RATIO * -1 * spinRelEncoder.getPosition();
+        REL_ENCODER_OFFSET = relEncPos - (spinHomeLocation - spinAbsEncoder.getAbsolutePosition());
+
+        // PID
+        spinPID = spinWheel.getPIDController();
 
         spinPID.setP(spin_kP, 0);
         spinPID.setI(spin_kI, 0);
@@ -92,35 +97,27 @@ public class SwerveWheel_FN implements SwerveWheel {
         pos = new Translation2d(y, -x);
 
         // Shuffleboard
-        ShuffleboardTab tab = Shuffleboard.getTab("Swerve Drive Output");
+        ShuffleboardTab tab = Shuffleboard.getTab("Swerve Drive");
 
-        shuffle_abs = tab.add(String.format("Absolute Encoder (%s)", canCoder), spinAbsEncoder.getAbsolutePosition())
+        shuffle_abs = tab.add(String.format("Absolute Encoder (%s)", canCoder), 0.0)
             .getEntry();
         
-        shuffle_rel = tab.add(String.format("Relative Encoder (%s)", spin), spinRelEncoder.getPosition())
+        shuffle_rel = tab.add(String.format("Relative Encoder (%s)", spin), 0.0)
             .getEntry();
-        
-        shuffle_relPos = tab.add(String.format("Rel Enc Pos (%s)", spin), -1.0)
-            .getEntry();
-        
-        shuffle_absPos = tab.add(String.format("Abs Enc Pos (%s)", canCoder), -1.0)
-            .getEntry();
-        
-        tab.add(String.format("Abs Angle Offset (%s)", spin), absAngleOffset);
     }
 
-    // Get Angle from Encoder (degrees)
-    private double getAngle() {
-        return (spinRelEncoder.getPosition() * 360.0 * (7.0/150.0) + absAngleOffset);
+    // Get Angle from Relative Encoder (degrees)
+    private double getAngleFromRelative() {
+        double a = (360.0 / k_SPIN_RATIO * -1.0 * spinRelEncoder.getPosition()) - REL_ENCODER_OFFSET;
+        return SwerveMathUtils.normalizeAngle(a);
     }
 
     // Set Speeds
     @Override
     public void setAngle(double angle) {
-        //angle = SwerveMathUtils.normalizeAngle(angle - absAngleOffset);
-        angle = angle - absAngleOffset;
-        angle = angle * (150.0/7.0) * (1.0/360.0);
-        spinPID.setReference(angle, ControlType.kPosition, 0);
+        angle = SwerveMathUtils.normalizeAngle(angle);
+        angle = (360.0 * k_SPIN_RATIO / -1.0 / angle) - REL_ENCODER_OFFSET;
+        spinPID.setReference(angle, ControlType.kPosition, 0); // this may be wrong
     }
 
     @Override
@@ -132,7 +129,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     public void set(SwerveModuleState state) {
         SwerveModuleState.optimize(
             state, 
-            Rotation2d.fromDegrees(getAngle())
+            Rotation2d.fromDegrees(getAngleFromRelative())
         );
         set(state.angle.getDegrees(), state.speedMetersPerSecond);
     }
@@ -161,10 +158,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     // Shuffleboard
     @Override
     public void shuffleboardUpdate() {
-        shuffle_abs.setDouble(spinAbsEncoder.getAbsolutePosition());
-        shuffle_rel.setDouble(spinRelEncoder.getPosition());
-
-        shuffle_absPos.setDouble(spinAbsEncoder.getAbsolutePosition() - absAngleOffset);
-        shuffle_relPos.setDouble(getAngle());
+        //shuffle_abs.setDouble(spinAbsEncoder.getAbsolutePosition());
+        shuffle_rel.setDouble(getAngleFromRelative());
     }
 }

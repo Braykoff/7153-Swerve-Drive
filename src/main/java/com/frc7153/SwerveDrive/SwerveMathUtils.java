@@ -2,12 +2,14 @@ package com.frc7153.SwerveDrive;
 
 public class SwerveMathUtils {
     /**
-     * Takes an angle and normalizes it to a range of 0 - 360
+     * Takes an angle and normalizes it to a range of -180 to 180
      * @param angle
      * @return The angle, normalized
      */
     public static double normalizeAngle(double angle) {
-        return angle % 360.0;
+        angle = angle - (360.0 * Math.floor(angle / 360.0));
+        if (angle > 180) { angle -= 360.0; }
+        return angle;
     }
 
     /**

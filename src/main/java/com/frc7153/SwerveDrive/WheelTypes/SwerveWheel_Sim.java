@@ -68,13 +68,6 @@ public class SwerveWheel_Sim implements SwerveWheel {
         periodic();
     }
 
-    // Config
-    @Override
-    public void config(boolean driveInverted, boolean spinInverted) {
-        configDriveInvert = driveInverted;
-        configSpinInvert = spinInverted;
-    }
-
     // Position
     @Override
     public Translation2d getPosition() { return pos; }
