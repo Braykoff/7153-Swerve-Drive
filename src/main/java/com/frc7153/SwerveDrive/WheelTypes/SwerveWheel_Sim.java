@@ -95,7 +95,4 @@ public class SwerveWheel_Sim implements SwerveWheel {
         shuffle_driveInvert.setBoolean(configDriveInvert);
         shuffle_angleInvert.setBoolean(configSpinInvert);
     }
-
-    @Override
-    public void shuffleboardUpdate() {}
 }

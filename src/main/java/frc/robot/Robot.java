@@ -14,7 +14,7 @@ public class Robot extends TimedRobot {
   // Swerve Wheels (spin, drive, abs encoder, posx, posy, absHomeLoc)
   // Height: 30.5 in (0.77 m), width: 20 in (0.51 m)
   //private SwerveWheel_FN2 fl = new SwerveWheel_FN2(8, 4, 12, -0.255, 0.385, 180.088);
-  private SwerveWheel_FN2 fr = new SwerveWheel_FN2(7, 3, 11, 0.255, 0.385, 178.77);
+  private SwerveWheel_FN fr = new SwerveWheel_FN(7, 3, 11, 0.255, 0.385, 178.77);
   //private SwerveWheel_FN2 rl = new SwerveWheel_FN2(10, 6, 14, -0.255, -0.385 , 8.35);
   //private SwerveWheel_FN2 rr = new SwerveWheel_FN2(9, 5, 13, 0.255, -0.385, 17.139);
 

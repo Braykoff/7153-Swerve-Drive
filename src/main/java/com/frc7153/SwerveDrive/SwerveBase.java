@@ -189,15 +189,11 @@ public class SwerveBase extends SubsystemBase {
     // Periodic
     @Override
     public void periodic() {
-        /*if (!DriverStation.isDisabled() && periodicRunning) {
+        if (!DriverStation.isDisabled() && periodicRunning) {
             fl.periodic();
             fr.periodic();
             rl.periodic();
             rr.periodic();
-        }*/
-        fl.shuffleboardUpdate();
-        fr.shuffleboardUpdate();
-        rl.shuffleboardUpdate();
-        rr.shuffleboardUpdate();
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.frc7153.SwerveDrive.WheelTypes;
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -11,44 +12,36 @@ import com.revrobotics.CANSparkMax.ControlType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
 import com.frc7153.SwerveDrive.SwerveMathUtils;
 
 /**
  * Swerve Wheel that uses a Falcon500 for the drive motor and Neo Brushless (with CAN Spark Max) for spin motor.
- * Uses CANCoder absolute encoder for absolute position.
+ * Uses CANCoder absolute encoder for absolute position. <br><br>
+ * <b>First used in 2023 season (Charged Up)</b>
  */
 public class SwerveWheel_FN implements SwerveWheel {
+    private static final double k_SPIN_RATIO = -150.0/ 7.0;
+    
     // Motors, Encoders, PID
     private TalonFX driveWheel;
     private CANSparkMax spinWheel;
 
     private RelativeEncoder spinRelEncoder;
-    private CANCoder spinAbsEncoder;
+    private CANCoder spinAbsEncoder; // TODO consider removing this
     private SparkMaxPIDController spinPID;
 
     // PID Coefficients
-    private static double spin_kP = 0.012013;
-    private static double spin_kI = 0.0;
-    private static double spin_kD = 0.00013784;
+    private static double spin_kP = 0.3; // 0.012013
+    private static double spin_kI = 0.0; // 0.0
+    private static double spin_kD = 0.0; // 0.00013784
+    private static double spin_kO = 10.0; // PID output range
 
     // Position
     private Translation2d pos;
 
     @Override
     public Translation2d getPosition() { return pos; }
-
-    // Config
-    private double absAngleOffset;
-
-    // Shuffleboard
-    private GenericEntry shuffle_abs;
-    private GenericEntry shuffle_rel;
-    private GenericEntry shuffle_absPos;
-    private GenericEntry shuffle_relPos;
 
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.
@@ -62,24 +55,27 @@ public class SwerveWheel_FN implements SwerveWheel {
      * @param spinHomeLocation When the wheel's direction is 0 degrees (forward), what is the output of the ABSOLUTE encoder (degrees)?
      */
     public SwerveWheel_FN(int spin, int drive, int canCoder, double x, double y, double spinHomeLocation) {
+        // Establish and Configure Objects
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
 
         spinAbsEncoder = new CANCoder(canCoder);
         spinRelEncoder = spinWheel.getEncoder();
-        spinRelEncoder.setPosition(0.0);
-
-        absAngleOffset = (spinAbsEncoder.getAbsolutePosition() - spinHomeLocation);
-
-        spinPID = spinWheel.getPIDController();
-
-        // Config CAN Spark Max
+        
         spinWheel.setSmartCurrentLimit(40);
+        spinAbsEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+
+        // Set Relative Encoder Offset
+        spinRelEncoder.setPosition((spinAbsEncoder.getAbsolutePosition() - spinHomeLocation) * k_SPIN_RATIO / 360.0);
+
+        // PID
+        // TODO make this lazy
+        spinPID = spinWheel.getPIDController();
 
         spinPID.setP(spin_kP, 0);
         spinPID.setI(spin_kI, 0);
         spinPID.setD(spin_kD, 0);
-        spinPID.setOutputRange(-10.0, 10.0);
+        spinPID.setOutputRange(-spin_kO, spin_kO);
 
         /*
          * The X and Y values are implemented in WPI's library oddly:
@@ -90,81 +86,37 @@ public class SwerveWheel_FN implements SwerveWheel {
          * See https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html 
          */
         pos = new Translation2d(y, -x);
-
-        // Shuffleboard
-        ShuffleboardTab tab = Shuffleboard.getTab("Swerve Drive Output");
-
-        shuffle_abs = tab.add(String.format("Absolute Encoder (%s)", canCoder), spinAbsEncoder.getAbsolutePosition())
-            .getEntry();
-        
-        shuffle_rel = tab.add(String.format("Relative Encoder (%s)", spin), spinRelEncoder.getPosition())
-            .getEntry();
-        
-        shuffle_relPos = tab.add(String.format("Rel Enc Pos (%s)", spin), -1.0)
-            .getEntry();
-        
-        shuffle_absPos = tab.add(String.format("Abs Enc Pos (%s)", canCoder), -1.0)
-            .getEntry();
-        
-        tab.add(String.format("Abs Angle Offset (%s)", spin), absAngleOffset);
     }
 
-    // Get Angle from Encoder (degrees)
-    private double getAngle() {
-        return (spinRelEncoder.getPosition() * 360.0 * (7.0/150.0) + absAngleOffset);
+    // Get Angle from Relative Encoder (degrees)
+    private double getAngleFromRelative() {
+        return SwerveMathUtils.normalizeAngle(spinRelEncoder.getPosition() * -360.0 / k_SPIN_RATIO);
     }
 
     // Set Speeds
     @Override
     public void setAngle(double angle) {
-        //angle = SwerveMathUtils.normalizeAngle(angle - absAngleOffset);
-        angle = angle - absAngleOffset;
-        angle = angle * (150.0/7.0) * (1.0/360.0);
-        spinPID.setReference(angle, ControlType.kPosition, 0);
+        angle = SwerveMathUtils.normalizeAngle(angle); // Normalize -180 to 180
+        angle = (angle / -360.0 * k_SPIN_RATIO); // Convert to NEO position
+        angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, 0 - k_SPIN_RATIO); // Find quickest route
+        spinPID.setReference(angle, ControlType.kPosition, 0); // Set PID setpoint
     }
 
     @Override
     public void setSpeed(double speed) {
-
+        
     }
 
     @Override
     public void set(SwerveModuleState state) {
         SwerveModuleState.optimize(
             state, 
-            Rotation2d.fromDegrees(getAngle())
+            Rotation2d.fromDegrees(getAngleFromRelative())
         );
         set(state.angle.getDegrees(), state.speedMetersPerSecond);
     }
 
     // Periodic
-    /*
     @Override
-    public void periodic() {
-        spinWheel.set(
-            SwerveMathUtils.symmetricClamp(
-                spinPID.calculate(getAngle()), 
-                maxSpinSpeed
-            )
-        );
-
-        driveWheel.set(
-            TalonFXControlMode.Velocity,
-            SwerveMathUtils.rpmToFalcon500Velocity(SwerveMathUtils.symmetricClamp(
-                targetSpeed + spinEncoder.getVelocity(),
-                maxDriveSpeed
-            )
-        ));
-    }*/
     public void periodic() {}
-
-    // Shuffleboard
-    @Override
-    public void shuffleboardUpdate() {
-        shuffle_abs.setDouble(spinAbsEncoder.getAbsolutePosition());
-        shuffle_rel.setDouble(spinRelEncoder.getPosition());
-
-        shuffle_absPos.setDouble(spinAbsEncoder.getAbsolutePosition() - absAngleOffset);
-        shuffle_relPos.setDouble(getAngle());
-    }
 }
