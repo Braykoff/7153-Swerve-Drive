@@ -3,6 +3,7 @@ package com.frc7153.SwerveDrive.WheelTypes;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -35,9 +36,9 @@ public class SwerveWheel_FN2 implements SwerveWheel {
     private SparkMaxPIDController spinPID;
 
     // PID Coefficients
-    private static double spin_kP = 0.012013;
-    private static double spin_kI = 0.0;
-    private static double spin_kD = 0.00013784;
+    private static double spin_kP = 0.3; // 0.012013
+    private static double spin_kI = 0.0; // 0.0
+    private static double spin_kD = 0.0; // 0.00013784
 
     // Position
     private Translation2d pos;
@@ -73,10 +74,14 @@ public class SwerveWheel_FN2 implements SwerveWheel {
         
         spinWheel.setSmartCurrentLimit(40);
         spinAbsEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+        //spinAbsEncoder.configFeedbackCoefficient(-0.087890625, "deg", SensorTimeBase.PerSecond);
 
         // Determine Relative Encoder Offset
-        double relEncPos = 360.0 / k_SPIN_RATIO * -1 * spinRelEncoder.getPosition();
+        double relEncPos = 360.0 / k_SPIN_RATIO * -1.0 * spinRelEncoder.getPosition();
         REL_ENCODER_OFFSET = relEncPos - (spinHomeLocation - spinAbsEncoder.getAbsolutePosition());
+
+
+        spinRelEncoder.setPosition((spinAbsEncoder.getAbsolutePosition() - spinHomeLocation) * k_SPIN_RATIO / 360.0);
 
         // PID
         spinPID = spinWheel.getPIDController();
@@ -99,7 +104,7 @@ public class SwerveWheel_FN2 implements SwerveWheel {
         // Shuffleboard
         ShuffleboardTab tab = Shuffleboard.getTab("Swerve Drive");
 
-        shuffle_abs = tab.add(String.format("Absolute Encoder (%s)", canCoder), 0.0)
+        shuffle_abs = tab.add("Output String (swervez)", "?")
             .getEntry();
         
         shuffle_rel = tab.add(String.format("Relative Encoder (%s)", spin), 0.0)
@@ -108,21 +113,31 @@ public class SwerveWheel_FN2 implements SwerveWheel {
 
     // Get Angle from Relative Encoder (degrees)
     private double getAngleFromRelative() {
-        double a = (360.0 / k_SPIN_RATIO * -1.0 * spinRelEncoder.getPosition()) - REL_ENCODER_OFFSET;
-        return SwerveMathUtils.normalizeAngle(a);
+        //double a = (360.0 / k_SPIN_RATIO * -1.0 * spinRelEncoder.getPosition()) - REL_ENCODER_OFFSET;
+        //return SwerveMathUtils.normalizeAngle(a);
+        return SwerveMathUtils.normalizeAngle(spinRelEncoder.getPosition() * -360.0 / k_SPIN_RATIO);
     }
 
     // Set Speeds
     @Override
     public void setAngle(double angle) {
         angle = SwerveMathUtils.normalizeAngle(angle);
-        angle = (360.0 * k_SPIN_RATIO / -1.0 / angle) - REL_ENCODER_OFFSET;
+        double _a = angle;
+        //angle = (360.0 * k_SPIN_RATIO / -1.0 / angle) - REL_ENCODER_OFFSET;
+        //angle = (-360.0 * angle * k_SPIN_RATIO) + REL_ENCODER_OFFSET;
+        //angle = (angle / 360.0) * k_SPIN_RATIO
+        angle = (angle / -360.0 * k_SPIN_RATIO); // Now in position of NEO
+        angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, 0 - k_SPIN_RATIO);
+        //angle = angle - (angle % spinRelEncoder.getPosition()); // Nearest multiple
+        //angle = Math.round(spinRelEncoder.getPosition() / angle) * angle;
+        //System.out.println(String.format("Set point is %s, current pos is %s, target pos is %s", _a, spinRelEncoder.getPosition(), angle));
+        //shuffleboardUpdate();
         spinPID.setReference(angle, ControlType.kPosition, 0); // this may be wrong
     }
 
     @Override
     public void setSpeed(double speed) {
-
+        
     }
 
     @Override
