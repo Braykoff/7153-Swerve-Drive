@@ -51,5 +51,12 @@ public class SwerveMathUtils {
      * @param rpm
      * @return Falcon500's encoder velocity
      */
-    public static double rpmToFalcon500Velocity(double rpm) { return rpm * 2048 * 0.1; }
+    public static double rpmToFalcon500Velocity(double rpm) { return rpm * (2048.0 / 600.0); }
+
+    /**
+     * Convert Falcon500's to RPMs encoder velocity
+     * @param Falcon500's encoder velocity
+     * @return rpm
+     */
+    public static double falcon500VelocityToRPM(double velocity) { return velocity * (600.0 / 2048.0); }
 }

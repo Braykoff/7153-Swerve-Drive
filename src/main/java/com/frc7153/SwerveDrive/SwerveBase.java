@@ -4,6 +4,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -14,8 +16,9 @@ public class SwerveBase extends SubsystemBase {
     // Wheels
     private SwerveWheel fl, fr, rl, rr;
     
-    // Kinematics
+    // Kinematics & Odometry
     private SwerveDriveKinematics kinematics;
+    private SwerveDriveOdometry odometry;
 
     // State
     private boolean periodicRunning = true;
@@ -38,6 +41,18 @@ public class SwerveBase extends SubsystemBase {
         rr = rearRight;
 
         kinematics = new SwerveDriveKinematics(fl.getPosition(), fr.getPosition(), rl.getPosition(), rr.getPosition());
+
+        odometry = new SwerveDriveOdometry(
+            kinematics, 
+            null, 
+            new SwerveModulePosition[] {
+                fl.getState(),
+                fr.getState(),
+                rl.getState(),
+                rr.getState()
+            }, 
+            null
+        ); // TODO finish this
     }
 
     /**

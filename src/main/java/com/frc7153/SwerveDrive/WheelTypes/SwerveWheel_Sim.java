@@ -2,7 +2,9 @@ package com.frc7153.SwerveDrive.WheelTypes;
 
 import java.util.Map;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
@@ -77,6 +79,12 @@ public class SwerveWheel_Sim implements SwerveWheel {
     // Position
     @Override
     public Translation2d getPosition() { return pos; }
+
+    // Get
+    @Override
+    public SwerveModulePosition getState() {
+        return new SwerveModulePosition(currentSpeed, Rotation2d.fromDegrees(currentAngle));
+    }
 
     // Set
     @Override

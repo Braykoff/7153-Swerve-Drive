@@ -1,6 +1,7 @@
 package com.frc7153.SwerveDrive.WheelTypes;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public interface SwerveWheel {
@@ -13,6 +14,12 @@ public interface SwerveWheel {
     public Translation2d getPosition();
 
     // Driving //
+
+    /**
+     * Gets the module state
+     * @return
+     */
+    public SwerveModulePosition getState();
 
     /**
      * Sets the angle of the wheel, from -180 to 180, with 0 degrees the front of the robot. 

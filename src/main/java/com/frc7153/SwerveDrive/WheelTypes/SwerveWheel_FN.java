@@ -17,6 +17,7 @@ import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -32,7 +33,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     // CONFIG VALUES //
     private static double k_SPIN_RATIO = 150.0 / 7.0;
     private static double k_DRIVE_RATIO = 8.14; // For standard speed module TODO check this
-    private static double k_WHEEL_DIAMETER = Units.inchesToMeters(3.75);
+    private static double k_WHEEL_CIRCUMFERENCE = Units.inchesToMeters(3.75) * Math.PI;
 
     private static int k_SPIN_CURRENT_LIMIT = 40;
     private static int k_DRIVE_CURRENT_LIMIT = 40;
@@ -140,6 +141,15 @@ public class SwerveWheel_FN implements SwerveWheel {
         driveWheel.setNeutralMode((coast) ? NeutralMode.Coast : NeutralMode.Brake);
     }
 
+    // Get State
+    @Override
+    public SwerveModulePosition getState() {
+        return new SwerveModulePosition(
+            SwerveMathUtils.falcon500VelocityToRPM(driveWheel.getSelectedSensorVelocity()) / k_DRIVE_RATIO * k_WHEEL_CIRCUMFERENCE / 60.0, 
+            Rotation2d.fromDegrees(SwerveMathUtils.normalizeAngle360(getAngleFromRelative()))
+        );
+    }
+
     // Set State
     @Override
     public void setAngle(double angle) {
@@ -151,7 +161,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     @Override
     public void setSpeed(double speed) {
-        double velocity = (speed / k_WHEEL_DIAMETER) * 60.0; // Convert to rotations per minute
+        double velocity = (speed / k_WHEEL_CIRCUMFERENCE) * 60.0; // Convert to rotations per minute
         velocity *= k_DRIVE_RATIO; // Convert to Falcon500 position
         driveWheel.set(ControlMode.Velocity, SwerveMathUtils.rpmToFalcon500Velocity(velocity)); // Set set point, in Falcon500 encoder's velocity
     }
