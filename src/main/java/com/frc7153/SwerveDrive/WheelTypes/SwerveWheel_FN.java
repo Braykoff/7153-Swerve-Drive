@@ -80,7 +80,7 @@ public class SwerveWheel_FN implements SwerveWheel {
         // Declare and Configure Motors
         driveWheel = new TalonFX(drive);
         spinWheel = new CANSparkMax(spin, MotorType.kBrushless);
-
+        
         toggleCoastMode(false);
 
         spinWheel.setSmartCurrentLimit(k_SPIN_CURRENT_LIMIT);

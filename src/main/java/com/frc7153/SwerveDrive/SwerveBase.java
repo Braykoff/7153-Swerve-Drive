@@ -188,6 +188,19 @@ public class SwerveBase extends SubsystemBase {
         periodicRunning = false;
     }
 
+    /**
+     * @param coast Whether the wheels should coast or not (brake)
+     * @param freeze Whether the wheels should stop moving
+     */
+    public void toggleCoastMode(boolean coast, boolean freeze) {
+        if (freeze) { stop(false); }
+        
+        fl.toggleCoastMode(coast);
+        fr.toggleCoastMode(coast);
+        rl.toggleCoastMode(coast);
+        rr.toggleCoastMode(coast);
+    }
+
     // Periodic
     @Override
     public void periodic() {
