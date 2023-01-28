@@ -42,7 +42,11 @@ public interface SwerveWheel {
      */
     public void set(SwerveModuleState state);
 
-    // Periodic //
+    /**
+     * Enables/disables coast mode
+     * @param coast
+     */
+    public void toggleCoastMode(boolean coast);
 
     /**
      * Needs to be called periodically to update PID loops

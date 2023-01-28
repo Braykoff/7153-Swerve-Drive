@@ -23,7 +23,7 @@ public class SwerveMathUtils {
      * @return Number to move to that is basically (not numerically) equivalent to the {@code setPoint} but near the {@code currentPos}
      */
     public static double calculateContinuousMovement(double currentPos, double setPoint, double gearRatio) {
-        return Math.floor(currentPos / gearRatio) * gearRatio + setPoint;
+        return Math.round(currentPos / gearRatio) * gearRatio + setPoint;
     }
 
     /**
@@ -43,18 +43,4 @@ public class SwerveMathUtils {
      * @return Falcon500's encoder velocity
      */
     public static double rpmToFalcon500Velocity(double rpm) { return rpm * 2048 * 0.1; }
-
-    /**
-     * Convert the Falcon500's velocity to RPMs
-     * @param velocity
-     * @return RPMs
-     */
-    public static double falcon500VelocityToRPM(double velocity) { return velocity / 2048 / 0.1; }
-
-    /**
-     * Convert degrees to radians
-     * @param angles
-     * @return radians
-     */
-    public static double degreesToRadians(double angles) { return angles * (Math.PI/180); }
 }

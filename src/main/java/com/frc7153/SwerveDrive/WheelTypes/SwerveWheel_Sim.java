@@ -15,6 +15,7 @@ public class SwerveWheel_Sim implements SwerveWheel {
     // States
     private double currentAngle;
     private double currentSpeed;
+    private boolean coast;
     private int updates = 0;
 
     // Config
@@ -30,6 +31,7 @@ public class SwerveWheel_Sim implements SwerveWheel {
     private GenericPublisher shuffle_updates;
     private GenericPublisher shuffle_driveInvert;
     private GenericPublisher shuffle_angleInvert;
+    private GenericPublisher shuffle_coast;
 
     // Constructor
     /**
@@ -65,6 +67,10 @@ public class SwerveWheel_Sim implements SwerveWheel {
             .withWidget(BuiltInWidgets.kBooleanBox)
             .getEntry();
         
+        shuffle_coast = column.add("Coasting?", false)
+            .withWidget(BuiltInWidgets.kBooleanBox)
+            .getEntry();
+        
         periodic();
     }
 
@@ -84,6 +90,11 @@ public class SwerveWheel_Sim implements SwerveWheel {
         set(state.angle.getDegrees(), state.speedMetersPerSecond);
     }
 
+    @Override
+    public void toggleCoastMode(boolean coast) {
+        this.coast = coast;
+    }
+
     // Periodic
     @Override
     public void periodic() {
@@ -94,5 +105,6 @@ public class SwerveWheel_Sim implements SwerveWheel {
         shuffle_updates.setInteger(updates);
         shuffle_driveInvert.setBoolean(configDriveInvert);
         shuffle_angleInvert.setBoolean(configSpinInvert);
+        shuffle_coast.setBoolean(coast);
     }
 }

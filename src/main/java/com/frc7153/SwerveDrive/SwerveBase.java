@@ -5,16 +5,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.frc7153.SwerveDrive.WheelTypes.SwerveWheel;
 
 public class SwerveBase extends SubsystemBase {
     // Wheels
-    private SwerveWheel fl;
-    private SwerveWheel fr;
-    private SwerveWheel rl;
-    private SwerveWheel rr;
+    private SwerveWheel fl, fr, rl, rr;
     
     // Kinematics
     private SwerveDriveKinematics kinematics;
@@ -23,7 +21,7 @@ public class SwerveBase extends SubsystemBase {
     private boolean periodicRunning = true;
 
     // Max Speeds
-    private double maxDriveSpeed = 100.0;
+    private double maxDriveSpeed = 4.0;
     private double maxSpinSpeed = 10.0;
     
     /**
@@ -53,20 +51,32 @@ public class SwerveBase extends SubsystemBase {
     }
 
     /**
-     * Drives the robot
-     * @param y forward/backward speed (meters per second)
-     * @param x left/right speed (meters per second)
-     * @param r rotation speed (degrees per second)
+     * Scale down speeds and distribute them to the wheels
+     * @param y
+     * @param x
+     * @param r
      */
-    public void driveAbsolute(double y, double x, double r) {
-        ChassisSpeeds speed = new ChassisSpeeds(y, x, -SwerveMathUtils.degreesToRadians(r));
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
+    private void scaleAndDistribute(SwerveModuleState[] states) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, maxDriveSpeed);
 
         fl.set(states[0]);
         fr.set(states[1]);
         rl.set(states[2]);
         rr.set(states[3]);
         periodicRunning = true;
+    }
+
+    /**
+     * Drives the robot
+     * @param y forward/backward speed (meters per second)
+     * @param x left/right speed (meters per second)
+     * @param r rotation speed (degrees per second)
+     */
+    public void driveAbsolute(double y, double x, double r) {
+        ChassisSpeeds speed = new ChassisSpeeds(y, x, -Units.degreesToRadians(r));
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
+
+        scaleAndDistribute(states);
     }
 
     /**
@@ -87,16 +97,12 @@ public class SwerveBase extends SubsystemBase {
     public void driveFieldOrientedAbsolute(double y, double x, double r, double deg) {
         ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(
             y, x, 
-            -SwerveMathUtils.degreesToRadians(r), 
+            -Units.degreesToRadians(r), 
             Rotation2d.fromDegrees(deg)
         );
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
 
-        fl.set(states[0]);
-        fr.set(states[1]);
-        rl.set(states[2]);
-        rr.set(states[3]);
-        periodicRunning = true;
+        scaleAndDistribute(states);
     }
 
     /**
@@ -115,14 +121,10 @@ public class SwerveBase extends SubsystemBase {
      * @param centerY The Y position of the center of rotation, relative to the robot's base (meters)
      */
     public void orbitAbsolute(double rotation, double centerX, double centerY) {
-        ChassisSpeeds speed = new ChassisSpeeds(0.0, 0.0, -SwerveMathUtils.degreesToRadians(rotation));
+        ChassisSpeeds speed = new ChassisSpeeds(0.0, 0.0, -Units.degreesToRadians(rotation));
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed, new Translation2d(centerX, centerY));
 
-        fl.set(states[0]);
-        fr.set(states[1]);
-        rl.set(states[2]);
-        rr.set(states[3]);
-        periodicRunning = true;
+        scaleAndDistribute(states);
     }
 
     /**
@@ -131,10 +133,10 @@ public class SwerveBase extends SubsystemBase {
      * @param right The speed of the right side of the robot (meters/second)
      */
     public void tankDriveAbsolute(double left, double right) {
-        fl.set(0.0, left);
-        rl.set(0.0, left);
-        fr.set(0.0, right);
-        rr.set(0.0, right);
+        fl.set(0.0, SwerveMathUtils.symmetricClamp(left, maxDriveSpeed));
+        rl.set(0.0, SwerveMathUtils.symmetricClamp(left, maxDriveSpeed));
+        fr.set(0.0, SwerveMathUtils.symmetricClamp(right, maxDriveSpeed));
+        rr.set(0.0, SwerveMathUtils.symmetricClamp(right, maxDriveSpeed));
 
         periodicRunning = true;
     }
