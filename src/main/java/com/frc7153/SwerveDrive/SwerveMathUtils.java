@@ -32,7 +32,9 @@ public class SwerveMathUtils {
      * @return Number to move to that is basically (not numerically) equivalent to the {@code setPoint} but near the {@code currentPos}
      */
     public static double calculateContinuousMovement(double currentPos, double setPoint, double gearRatio) {
-        return Math.round(currentPos / gearRatio) * gearRatio + setPoint;
+        //return Math.round(currentPos / gearRatio) * gearRatio + setPoint; // This line is questionable
+        setPoint = setPoint / gearRatio;
+        return (Math.round((currentPos/gearRatio) - setPoint) + setPoint) * gearRatio;
     }
 
     /**

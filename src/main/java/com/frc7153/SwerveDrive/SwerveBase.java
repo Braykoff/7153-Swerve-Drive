@@ -42,7 +42,7 @@ public class SwerveBase extends SubsystemBase {
 
         kinematics = new SwerveDriveKinematics(fl.getPosition(), fr.getPosition(), rl.getPosition(), rr.getPosition());
 
-        odometry = new SwerveDriveOdometry(
+        /*odometry = new SwerveDriveOdometry(
             kinematics, 
             null, 
             new SwerveModulePosition[] {
@@ -52,7 +52,8 @@ public class SwerveBase extends SubsystemBase {
                 rr.getState()
             }, 
             null
-        ); // TODO finish this
+        );
+        */
     }
 
     /**

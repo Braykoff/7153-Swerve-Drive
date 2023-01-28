@@ -33,7 +33,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     // CONFIG VALUES //
     private static double k_SPIN_RATIO = 150.0 / 7.0;
     private static double k_DRIVE_RATIO = 8.14; // For standard speed module TODO check this
-    private static double k_WHEEL_CIRCUMFERENCE = Units.inchesToMeters(3.75) * Math.PI;
+    private static double k_WHEEL_CIRCUMFERENCE = Units.inchesToMeters(4.0) * Math.PI; // 3.75
 
     private static int k_SPIN_CURRENT_LIMIT = 40;
     private static int k_DRIVE_CURRENT_LIMIT = 40;
@@ -44,7 +44,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     private static int k_DRIVE_PID_INDEX = 0;
 
     private static double spin_kP = 0.3;
-    private static double spin_kI = 0.0;
+    private static double spin_kI = 0.00001;
     private static double spin_kD = 0.0;
     private static double spin_kO = 10.0;
 
@@ -154,8 +154,12 @@ public class SwerveWheel_FN implements SwerveWheel {
     @Override
     public void setAngle(double angle) {
         angle = SwerveMathUtils.normalizeAngle180(angle); // Normalize -180 to 180
+        double _a = angle;
         angle = (angle / 360.0 * k_SPIN_RATIO); // Convert to NEO position
         angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, k_SPIN_RATIO); // Find quickest route
+        if (Math.abs(spinRelEncoder.getPosition() - angle) > 21.0) {
+            System.out.println(String.format("WARNING motor commanded to move greater than gear ratio (%s to %s, target %s)", spinRelEncoder.getPosition(), angle, _a));
+        } 
         spinPID.setReference(angle, ControlType.kPosition, k_SPIN_PID_INDEX); // Set PID setpoint
     }
 

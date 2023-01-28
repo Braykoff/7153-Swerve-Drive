@@ -12,7 +12,7 @@ import com.frc7153.SwerveDrive.WheelTypes.*;
 public class Robot extends TimedRobot {
   // Swerve Wheels (spin, drive, abs encoder, posx, posy, absHomeLoc)
   // Height: 30.5 in (0.77 m), width: 20 in (0.51 m)
-  private SwerveWheel_FN fl = new SwerveWheel_FN(8, 4, 12, -0.255, 0.385, 180.088);
+  private SwerveWheel_FN fl = new SwerveWheel_FN(8, 4, 12, -0.255, 0.385, 181.67);
   private SwerveWheel_FN fr = new SwerveWheel_FN(7, 3, 11, 0.255, 0.385, 178.77);
   private SwerveWheel_FN rl = new SwerveWheel_FN(10, 6, 14, -0.255, -0.385 , 8.35);
   private SwerveWheel_FN rr = new SwerveWheel_FN(9, 5, 13, 0.255, -0.385, 17.139);
@@ -42,6 +42,14 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {}
 
+  private double sp = 0.0;
+
+  @Override
+  public void teleopInit() {
+    base.setAngle(0.0);
+    sp = 0.0;
+  }
+
   @Override
   public void teleopPeriodic() {
     //base.setAngle(0.0);
@@ -52,7 +60,17 @@ public class Robot extends TimedRobot {
     base.setAngle(sp);
     DriverStation.reportWarning(String.format("Setpoint is -> %s", sp), false);*/
     //fr.setAngle(90.0);
-    base.setAngle(joy1.getThrottle() * 180);
+    //base.setAngle(joy1.getThrottle() * 180);
+
+    if (joy1.getRawButtonPressed(11)) {
+      sp += 45.0;
+      base.setAngle(sp);
+      System.out.println(String.format("Angle is %s", sp));
+    } else if (joy1.getRawButtonPressed(12)) {
+      sp -= 45.0;
+      base.setAngle(sp);
+      System.out.println(String.format("Angle is %s", sp));
+    }
   }
 
   @Override
