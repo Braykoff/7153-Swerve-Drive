@@ -71,6 +71,8 @@ public class Robot extends TimedRobot {
       base.setAngle(sp);
       System.out.println(String.format("Angle is %s", sp));
     }
+
+    base.setSpeed(joy1.getThrottle() * 4.0);
   }
 
   @Override

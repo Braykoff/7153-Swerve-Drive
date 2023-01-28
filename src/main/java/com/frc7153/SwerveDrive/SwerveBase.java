@@ -166,14 +166,24 @@ public class SwerveBase extends SubsystemBase {
 
     /**
      * Sets all the motors to a specific angle (for testing usually).
-     * Will stop the drive wheel.
      * @param angle in degrees
      */
     public void setAngle(double angle) {
-        fl.set(angle, 0.0);
-        fr.set(angle, 0.0);
-        rl.set(angle, 0.0);
-        rr.set(angle, 0.0);
+        fl.setAngle(angle);
+        fr.setAngle(angle);
+        rl.setAngle(angle);
+        rr.setAngle(angle);
+    }
+
+    /**
+     * Sets all the motors to a specific speed (for testing usually).
+     * @param speed
+     */
+    public void setSpeed(double speed) {
+        fl.setSpeed(speed);
+        fr.setSpeed(speed);
+        rl.setSpeed(speed);
+        rr.setSpeed(speed);
     }
     
     /**

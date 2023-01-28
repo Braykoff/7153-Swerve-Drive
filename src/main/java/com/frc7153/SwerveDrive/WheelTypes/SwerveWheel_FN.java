@@ -32,13 +32,15 @@ import com.frc7153.SwerveDrive.SwerveMathUtils;
 public class SwerveWheel_FN implements SwerveWheel {
     // CONFIG VALUES //
     private static double k_SPIN_RATIO = 150.0 / 7.0;
-    private static double k_DRIVE_RATIO = 8.14; // For standard speed module TODO check this
+    private static double k_DRIVE_RATIO = 6.12; // For standard speed module TODO check this
     private static double k_WHEEL_CIRCUMFERENCE = Units.inchesToMeters(4.0) * Math.PI; // 3.75
 
     private static int k_SPIN_CURRENT_LIMIT = 40;
     private static int k_DRIVE_CURRENT_LIMIT = 40;
     private static int k_DRIVE_CURRENT_PEAK = 40;
     private static double k_DRIVE_CURRENT_PEAK_DURATION = 0.1;
+    private static double k_DRIVE_ERR = 0.5;
+    private static double k_DRIVE_DEADBAND = 0.5; // Meters ber second
 
     private static int k_SPIN_PID_INDEX = 0;
     private static int k_DRIVE_PID_INDEX = 0;
@@ -111,7 +113,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
         // Drive PID
         driveWheel.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        driveWheel.configAllowableClosedloopError(k_DRIVE_PID_INDEX, 0);
+        driveWheel.configAllowableClosedloopError(k_DRIVE_PID_INDEX, k_DRIVE_ERR);
         
         driveWheel.config_kP(k_DRIVE_PID_INDEX, drive_kP);
         driveWheel.config_kI(k_DRIVE_PID_INDEX, drive_kI);
@@ -165,6 +167,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     @Override
     public void setSpeed(double speed) {
+        speed = SwerveMathUtils.applyDeadband(speed, k_DRIVE_DEADBAND); // Apply deadband
         double velocity = (speed / k_WHEEL_CIRCUMFERENCE) * 60.0; // Convert to rotations per minute
         velocity *= k_DRIVE_RATIO; // Convert to Falcon500 position
         driveWheel.set(ControlMode.Velocity, SwerveMathUtils.rpmToFalcon500Velocity(velocity)); // Set set point, in Falcon500 encoder's velocity

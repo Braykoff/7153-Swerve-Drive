@@ -49,6 +49,19 @@ public class SwerveMathUtils {
     }
 
     /**
+     * Apply a deadband to the value
+     * @param value
+     * @param deadband
+     * @return
+     */
+    public static double applyDeadband(double value, double deadband) {
+        if (Math.abs(value) < deadband) {
+            return 0.0;
+        }
+        return value;
+    }
+
+    /**
      * Convert RPMs to Falcon500's encoder velocity
      * @param rpm
      * @return Falcon500's encoder velocity
