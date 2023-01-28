@@ -130,7 +130,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     // Get Angle from Relative Encoder (degrees)
     private double getAngleFromRelative() {
-        return SwerveMathUtils.normalizeAngle(spinRelEncoder.getPosition() * 360.0 / k_SPIN_RATIO);
+        return SwerveMathUtils.normalizeAngle180(spinRelEncoder.getPosition() * 360.0 / k_SPIN_RATIO);
     }
 
     // Coast
@@ -143,7 +143,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     // Set State
     @Override
     public void setAngle(double angle) {
-        angle = SwerveMathUtils.normalizeAngle(angle); // Normalize -180 to 180
+        angle = SwerveMathUtils.normalizeAngle180(angle); // Normalize -180 to 180
         angle = (angle / 360.0 * k_SPIN_RATIO); // Convert to NEO position
         angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, k_SPIN_RATIO); // Find quickest route
         spinPID.setReference(angle, ControlType.kPosition, k_SPIN_PID_INDEX); // Set PID setpoint
@@ -160,7 +160,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     public void set(SwerveModuleState state) {
         SwerveModuleState.optimize(
             state, 
-            Rotation2d.fromDegrees(getAngleFromRelative())
+            Rotation2d.fromDegrees(SwerveMathUtils.normalizeAngle360(getAngleFromRelative()))
         );
         set(state.angle.getDegrees(), state.speedMetersPerSecond);
     }

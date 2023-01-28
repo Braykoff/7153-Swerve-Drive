@@ -6,10 +6,19 @@ public class SwerveMathUtils {
      * @param angle
      * @return The angle, normalized
      */
-    public static double normalizeAngle(double angle) {
-        angle = angle - (360.0 * Math.floor(angle / 360.0));
+    public static double normalizeAngle180(double angle) {
+        angle = normalizeAngle360(angle);
         if (angle > 180) { angle -= 360.0; }
         return angle;
+    }
+
+    /**
+     * Takes an angle and normalizes it to a range of 0 - 360
+     * @param angle
+     * @return The angle, normalizes
+     */
+    public static double normalizeAngle360(double angle) {
+        return angle - (360.0 * Math.floor(angle / 360.0));
     }
 
     /**
