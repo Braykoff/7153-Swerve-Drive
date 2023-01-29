@@ -67,13 +67,17 @@ public class Joystick extends edu.wpi.first.wpilibj.Joystick {
     public void setThrottleInverted(boolean invert) { throttleInvert = invert; }
 
     /**
-     * 
+     * Sets how offsets are handled
      * @param mode
      */
     public void setOffsetMode(OffsetMode mode) { this.mode = mode; }
 
     // Get Axis
-
+    /**
+     * Gets the axis, applying any deadband, inversion, or offset needed.
+     * @param axis
+     * @return The adjusted input
+     */
     @Override
     public double getRawAxis(int axis) {
         double value = super.getRawAxis(axis);
@@ -95,8 +99,7 @@ public class Joystick extends edu.wpi.first.wpilibj.Joystick {
             }
         }
 
-        // Deadband
-        value = ControllerMathUtil.applyDeadband(value, (axis == getThrottleChannel()) ? throttleDeadband : joystickDeadband);
-        return value;
+        // Apply Deadband
+        return ControllerMathUtil.applyDeadband(value, (axis == getThrottleChannel()) ? throttleDeadband : joystickDeadband);
     }
 }

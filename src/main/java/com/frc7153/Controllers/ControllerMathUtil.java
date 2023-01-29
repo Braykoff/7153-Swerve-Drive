@@ -18,10 +18,10 @@ public class ControllerMathUtil {
      * Examples:
      * <ul>
      * <li>if value is 0.6 and offset is 0.2, output is 0.5</li>
-     * <li>if value is -0.4 and offset is 0.1, output is </li>
+     * <li>if value is -0.4 and offset is 0.1, output is -0.45</li>
      * <li>if value is 0.3 and offset is 0.3, output is 0.0</li>
      * </ul>
-     * <br><br>Assumes scale ranges from -1.0 to 1.0
+     * <br><br>Assumes scale ranges from and to [-1.0, 1.0]
      * @param value
      * @param offset
      * @return Scaled value
