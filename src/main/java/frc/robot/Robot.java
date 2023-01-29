@@ -6,6 +6,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+
 import com.frc7153.SwerveDrive.SwerveBase;
 import com.frc7153.SwerveDrive.WheelTypes.*;
 
@@ -21,6 +23,7 @@ public class Robot extends TimedRobot {
 
   // Controller
   private Joystick joy1 = new Joystick(0);
+  private XboxController xbox1 = new XboxController(1);
 
   @Override
   public void robotInit() {
@@ -62,7 +65,7 @@ public class Robot extends TimedRobot {
     //fr.setAngle(90.0);
     //base.setAngle(joy1.getThrottle() * 180);
 
-    if (joy1.getRawButtonPressed(11)) {
+    /*if (joy1.getRawButtonPressed(11)) {
       sp += 45.0;
       base.setAngle(sp);
       System.out.println(String.format("Angle is %s", sp));
@@ -72,7 +75,8 @@ public class Robot extends TimedRobot {
       System.out.println(String.format("Angle is %s", sp));
     }
 
-    base.setSpeed(joy1.getThrottle() * 4.0);
+    base.setSpeed(joy1.getThrottle() * 4.0);*/
+    base.drive(xbox1.getLeftY(), -xbox1.getLeftX(), 0.0);
   }
 
   @Override

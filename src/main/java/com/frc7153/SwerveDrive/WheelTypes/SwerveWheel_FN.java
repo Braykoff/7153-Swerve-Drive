@@ -175,7 +175,7 @@ public class SwerveWheel_FN implements SwerveWheel {
 
     @Override
     public void set(SwerveModuleState state) {
-        SwerveModuleState.optimize(
+        state = SwerveModuleState.optimize(
             state, 
             Rotation2d.fromDegrees(SwerveMathUtils.normalizeAngle360(getAngleFromRelative()))
         );
