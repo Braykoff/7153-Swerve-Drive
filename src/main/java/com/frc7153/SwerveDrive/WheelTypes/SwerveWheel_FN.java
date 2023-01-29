@@ -11,6 +11,7 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxPIDController.AccelStrategy;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -19,9 +20,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
+import com.frc7153.SwerveDrive.SwerveBase;
 import com.frc7153.SwerveDrive.SwerveMathUtils;
 
 /**
@@ -36,8 +39,8 @@ public class SwerveWheel_FN implements SwerveWheel {
     private static double k_WHEEL_CIRCUMFERENCE = Units.inchesToMeters(4.0) * Math.PI; // 3.75
 
     private static int k_SPIN_CURRENT_LIMIT = 40;
-    private static int k_DRIVE_CURRENT_LIMIT = 40;
-    private static int k_DRIVE_CURRENT_PEAK = 40;
+    private static int k_DRIVE_CURRENT_LIMIT = 20;
+    private static int k_DRIVE_CURRENT_PEAK = 25;
     private static double k_DRIVE_CURRENT_PEAK_DURATION = 0.1;
     private static double k_DRIVE_ERR = 0.5;
     private static double k_DRIVE_DEADBAND = 0.5; // Meters ber second
@@ -54,6 +57,8 @@ public class SwerveWheel_FN implements SwerveWheel {
     private static double drive_kI = 0.0;
     private static double drive_kD = 0.0;
     private static double drive_kF = 0.0;
+
+    private static double k_SPIN_MAX_ACCEL = 0.8;
     
     // Motors, Encoders, PID
     private TalonFX driveWheel;
@@ -90,6 +95,8 @@ public class SwerveWheel_FN implements SwerveWheel {
         driveWheel.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, k_DRIVE_CURRENT_LIMIT, k_DRIVE_CURRENT_PEAK, k_DRIVE_CURRENT_PEAK_DURATION));
         driveWheel.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, k_DRIVE_CURRENT_LIMIT, k_DRIVE_CURRENT_PEAK, k_DRIVE_CURRENT_PEAK_DURATION));
 
+        spinWheel.setInverted(true);
+
         // Declare and Configure Encoders
         CANCoder spinAbsEncoder = new CANCoder(canCoder);
         spinRelEncoder = spinWheel.getEncoder();
@@ -97,7 +104,7 @@ public class SwerveWheel_FN implements SwerveWheel {
         spinAbsEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
         // Set Relative Encoder Offset
-        spinRelEncoder.setPosition((spinAbsEncoder.getAbsolutePosition() - spinHomeLocation) * k_SPIN_RATIO / -360.0);
+        spinRelEncoder.setPosition((spinAbsEncoder.getAbsolutePosition() - spinHomeLocation) * k_SPIN_RATIO / 360.0);
 
         // Spin PID
         spinPID = spinWheel.getPIDController();
@@ -131,6 +138,17 @@ public class SwerveWheel_FN implements SwerveWheel {
         pos = new Translation2d(y, -x);
     }
 
+    /**
+     * Enables/configs trapezoidal motion trajectory
+     * @param base The robot base (used to get max drive speed and spin speed)
+     */
+    public void enableMotionAccelerationStrategy(SwerveBase base) {
+        spinPID.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, k_SPIN_PID_INDEX);
+        spinPID.setSmartMotionMaxAccel(k_SPIN_MAX_ACCEL, k_SPIN_PID_INDEX);
+        spinPID.setSmartMotionMaxVelocity(base.getMaxDriveSpeed(), k_SPIN_PID_INDEX);
+        spinPID.setSmartMotionMinOutputVelocity(0.05, k_SPIN_PID_INDEX);
+    }
+
     // Get Angle from Relative Encoder (degrees)
     private double getAngleFromRelative() {
         return SwerveMathUtils.normalizeAngle180(spinRelEncoder.getPosition() * 360.0 / k_SPIN_RATIO);
@@ -159,9 +177,9 @@ public class SwerveWheel_FN implements SwerveWheel {
         double _a = angle;
         angle = (angle / 360.0 * k_SPIN_RATIO); // Convert to NEO position
         angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, k_SPIN_RATIO); // Find quickest route
-        if (Math.abs(spinRelEncoder.getPosition() - angle) > 21.0) {
-            System.out.println(String.format("WARNING motor commanded to move greater than gear ratio (%s to %s, target %s)", spinRelEncoder.getPosition(), angle, _a));
-        } 
+        // if (Math.abs(spinRelEncoder.getPosition() - angle) > 21.0) {
+        //     System.out.println(String.format("WARNING motor commanded to move greater than gear ratio (%s to %s, target %s)", spinRelEncoder.getPosition(), angle, _a));
+        // } 
         spinPID.setReference(angle, ControlType.kPosition, k_SPIN_PID_INDEX); // Set PID setpoint
     }
 

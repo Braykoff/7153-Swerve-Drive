@@ -1,5 +1,6 @@
 package com.frc7153.SwerveDrive;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -18,14 +19,17 @@ public class SwerveBase extends SubsystemBase {
     
     // Kinematics & Odometry
     private SwerveDriveKinematics kinematics;
+
     private SwerveDriveOdometry odometry;
+    private boolean odometryRunning = false;
+    private Pose2d odometryPosition;
 
     // State
     private boolean periodicRunning = true;
 
     // Max Speeds
     private double maxDriveSpeed = 4.0;
-    private double maxSpinSpeed = 10.0;
+    private double maxSpinSpeed = 360.0;
     
     /**
      * Creates a new SwerveBase, with four SwerveWheels.
@@ -34,7 +38,7 @@ public class SwerveBase extends SubsystemBase {
      * @param rearLeft
      * @param rearRight
      */
-    public SwerveBase(SwerveWheel frontLeft, SwerveWheel frontRight, SwerveWheel rearLeft, SwerveWheel rearRight) {
+    public SwerveBase(SwerveWheel frontLeft, SwerveWheel frontRight, SwerveWheel rearLeft, SwerveWheel rearRight, double gyroAngle) {
         fl = frontLeft;
         fr = frontRight;
         rl = rearLeft;
@@ -42,18 +46,39 @@ public class SwerveBase extends SubsystemBase {
 
         kinematics = new SwerveDriveKinematics(fl.getPosition(), fr.getPosition(), rl.getPosition(), rr.getPosition());
 
-        /*odometry = new SwerveDriveOdometry(
+        odometry = new SwerveDriveOdometry(
             kinematics, 
-            null, 
+            Rotation2d.fromDegrees(gyroAngle), 
             new SwerveModulePosition[] {
                 fl.getState(),
                 fr.getState(),
                 rl.getState(),
                 rr.getState()
             }, 
-            null
+            new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0))
         );
-        */
+    }
+
+    /**
+     * Starts (or restarts) odometry
+     * @param gyroAngle The angle of the gyroscope (degrees)
+     * @param startX Starting X position (meters)
+     * @param startY Starting Y position (meters)
+     */
+    public void startOdometry(double gyroAngle, double startX, double startY) {
+        odometry = new SwerveDriveOdometry(
+            kinematics, 
+            Rotation2d.fromDegrees(gyroAngle), 
+            new SwerveModulePosition[] {
+                fl.getState(),
+                fr.getState(),
+                rl.getState(),
+                rr.getState()
+            },
+            new Pose2d(startX, startY, Rotation2d.fromDegrees(0.0))
+        );
+
+        odometryRunning = true;
     }
 
     /**
@@ -67,13 +92,23 @@ public class SwerveBase extends SubsystemBase {
     }
 
     /**
+     * @return The max drive speed (meters/second)
+     */
+    public double getMaxDriveSpeed() { return maxDriveSpeed; }
+
+    /**
+     * @return The max spin speed (degrees/second)
+     */
+    public double getMaxSpinSpeed() { return maxSpinSpeed; }
+
+    /**
      * Scale down speeds and distribute them to the wheels
      * @param y
      * @param x
      * @param r
      */
     private void scaleAndDistribute(SwerveModuleState[] states) {
-        SwerveDriveKinematics.desaturateWheelSpeeds(states, maxDriveSpeed);
+        //SwerveDriveKinematics.desaturateWheelSpeeds(states, maxDriveSpeed);
 
         fl.set(states[0]);
         fr.set(states[1]);
@@ -90,7 +125,7 @@ public class SwerveBase extends SubsystemBase {
      */
     public void driveAbsolute(double y, double x, double r) {
         ChassisSpeeds speed = new ChassisSpeeds(y, x, -Units.degreesToRadians(r));
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed, new Translation2d(0, 0));
 
         scaleAndDistribute(states);
     }
@@ -113,7 +148,7 @@ public class SwerveBase extends SubsystemBase {
     public void driveFieldOrientedAbsolute(double y, double x, double r, double deg) {
         ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(
             y, x, 
-            -Units.degreesToRadians(r), 
+            Units.degreesToRadians(r), 
             Rotation2d.fromDegrees(deg)
         );
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(speed);
@@ -227,14 +262,41 @@ public class SwerveBase extends SubsystemBase {
         rr.toggleCoastMode(coast);
     }
 
+    // Reset Odometry
+    public void resetOdometry(double gyroAngle, Pose2d newPosition) {
+        if (odometryRunning == false) { return; }
+
+        odometry.resetPosition(
+            Rotation2d.fromDegrees(gyroAngle), 
+            new SwerveModuleState[] {
+                fl.get
+            }, 
+            newPosition
+        );
+    }
+
     // Periodic
-    @Override
-    public void periodic() {
+    public void periodic(double gyroAngle) {
         if (!DriverStation.isDisabled() && periodicRunning) {
             fl.periodic();
             fr.periodic();
             rl.periodic();
             rr.periodic();
+
+            if (odometryRunning) {
+                odometryPosition = odometry.update(
+                    Rotation2d.fromDegrees(gyroAngle), 
+                    new SwerveModulePosition[] {
+                        fl.getState(),
+                        fr.getState(),
+                        rl.getState(),
+                        rr.getState()
+                    }
+                );
+            }
         }
     }
+
+    @Override
+    public void periodic() { periodic(0.0); }
 }
