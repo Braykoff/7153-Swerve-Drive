@@ -4,10 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 
 import com.frc7153.SwerveDrive.SwerveBase;
@@ -28,6 +31,10 @@ public class Robot extends TimedRobot {
 
   private SwerveBase base = new SwerveBase(fl, fr, rl, rr, gyro.getAngle());
 
+  // Position
+  private GenericEntry shufflePos = Shuffleboard.getTab("SwerveDrive").add("Position (odometry)", "?").getEntry();
+  private GenericEntry shuffleAngle = Shuffleboard.getTab("SwerveDrive").add("Rotation (deg)", 0.0).getEntry();
+
   // Controller
   private Joystick joy1 = new Joystick(0);
   private XboxController xbox1 = new XboxController(1);
@@ -35,7 +42,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     //base.setMaxSpeed(500.0, 0.7);
-    base.setMaxSpeed(3.0, 360.0);
+    base.setMaxSpeed(1.0, 180.0);
 
     fl.enableMotionAccelerationStrategy(base);
     fl.enableMotionAccelerationStrategy(base);
@@ -47,12 +54,17 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     //CommandScheduler.getInstance().run();
     // OR:
-    //base.periodic();
+    base.periodic(gyro.getAngle());
     if (xbox1.getRightBumper()) {
       base.toggleCoastMode(true, false);
     } else {
       base.toggleCoastMode(false, false);
     }
+
+    shuffleAngle.setDouble(gyro.getAngle());
+
+    Pose2d estPos = base.getOdometricPosition();
+    shufflePos.setString(String.format("(%s m, %s m), %s deg", estPos.getX(), estPos.getY(), estPos.getRotation().getDegrees()));
   }
 
   @Override
@@ -70,6 +82,7 @@ public class Robot extends TimedRobot {
     //base.setAngle(0.0);
     //sp = 0.0;
     gyro.reset();
+    base.startOdometry(gyro.getAngle(), 0.0, 0.0);
   }
 
   @Override

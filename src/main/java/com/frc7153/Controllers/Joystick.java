@@ -1,6 +1,7 @@
 package com.frc7153.Controllers;
 
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /**
  * Custom Joystick implementation that adds deadband and offset functionality
@@ -42,7 +43,7 @@ public class Joystick extends edu.wpi.first.wpilibj.Joystick {
      * When this runs, there should be <b>no force applied</b> to the joystick (it should be free to move
      * to its 0, 0 position)
      */
-    public void configOffset() {
+    public void calibrateOffset() {
         offset = new Translation3d(
             super.getRawAxis(getXChannel()), 
             super.getRawAxis(getYChannel()), 
@@ -101,5 +102,29 @@ public class Joystick extends edu.wpi.first.wpilibj.Joystick {
 
         // Apply Deadband
         return ControllerMathUtil.applyDeadband(value, (axis == getThrottleChannel()) ? throttleDeadband : joystickDeadband);
+    }
+
+    /**
+     * A command to recalibrate the joystick. This can be bound to a button, or put on Shuffleboard.
+     */
+    public class CalibrateOffsetCommand extends CommandBase {
+        private boolean running = false;
+
+        @Override
+        public void initialize() {
+            running = true;
+            calibrateOffset();
+            System.out.println(String.format("Joystick %s recelebrated", getPort()));
+            running = false;
+        }
+
+        @Override
+        public boolean isFinished() { return !running; }
+
+        @Override
+        public boolean runsWhenDisabled() { return true; }
+
+        @Override
+        public String getName() { return String.format("Recalibrate %s", getPort()); }
     }
 }

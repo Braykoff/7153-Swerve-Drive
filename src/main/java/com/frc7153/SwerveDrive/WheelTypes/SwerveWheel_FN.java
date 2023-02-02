@@ -71,7 +71,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     private Translation2d pos;
 
     @Override
-    public Translation2d getPosition() { return pos; }
+    public Translation2d getPosition() {return pos; }
 
     /**
      * Creates a new Swerve Wheel. Expects a Falcon500 (TalonFX) for the drive wheel and a Rev Brushless NEO for spin motor.
@@ -174,12 +174,8 @@ public class SwerveWheel_FN implements SwerveWheel {
     @Override
     public void setAngle(double angle) {
         angle = SwerveMathUtils.normalizeAngle180(angle); // Normalize -180 to 180
-        double _a = angle;
         angle = (angle / 360.0 * k_SPIN_RATIO); // Convert to NEO position
         angle = SwerveMathUtils.calculateContinuousMovement(spinRelEncoder.getPosition(), angle, k_SPIN_RATIO); // Find quickest route
-        // if (Math.abs(spinRelEncoder.getPosition() - angle) > 21.0) {
-        //     System.out.println(String.format("WARNING motor commanded to move greater than gear ratio (%s to %s, target %s)", spinRelEncoder.getPosition(), angle, _a));
-        // } 
         spinPID.setReference(angle, ControlType.kPosition, k_SPIN_PID_INDEX); // Set PID setpoint
     }
 

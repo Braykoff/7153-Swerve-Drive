@@ -21,7 +21,6 @@ public class SwerveBase extends SubsystemBase {
     private SwerveDriveKinematics kinematics;
 
     private SwerveDriveOdometry odometry;
-    private boolean odometryRunning = false;
     private Pose2d odometryPosition;
 
     // State
@@ -30,6 +29,16 @@ public class SwerveBase extends SubsystemBase {
     // Max Speeds
     private double maxDriveSpeed = 4.0;
     private double maxSpinSpeed = 360.0;
+
+    // Get Module Position
+    private SwerveModulePosition[] getSwerveModulePositions() {
+        return new SwerveModulePosition[] {
+                fl.getState(),
+                fr.getState(),
+                rl.getState(),
+                rr.getState()
+        };
+    }
     
     /**
      * Creates a new SwerveBase, with four SwerveWheels.
@@ -46,17 +55,7 @@ public class SwerveBase extends SubsystemBase {
 
         kinematics = new SwerveDriveKinematics(fl.getPosition(), fr.getPosition(), rl.getPosition(), rr.getPosition());
 
-        odometry = new SwerveDriveOdometry(
-            kinematics, 
-            Rotation2d.fromDegrees(gyroAngle), 
-            new SwerveModulePosition[] {
-                fl.getState(),
-                fr.getState(),
-                rl.getState(),
-                rr.getState()
-            }, 
-            new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0))
-        );
+        startOdometry(gyroAngle, 0.0, 0.0);
     }
 
     /**
@@ -69,16 +68,9 @@ public class SwerveBase extends SubsystemBase {
         odometry = new SwerveDriveOdometry(
             kinematics, 
             Rotation2d.fromDegrees(gyroAngle), 
-            new SwerveModulePosition[] {
-                fl.getState(),
-                fr.getState(),
-                rl.getState(),
-                rr.getState()
-            },
+            getSwerveModulePositions(),
             new Pose2d(startX, startY, Rotation2d.fromDegrees(0.0))
         );
-
-        odometryRunning = true;
     }
 
     /**
@@ -262,17 +254,16 @@ public class SwerveBase extends SubsystemBase {
         rr.toggleCoastMode(coast);
     }
 
-    // Reset Odometry
-    public void resetOdometry(double gyroAngle, Pose2d newPosition) {
-        if (odometryRunning == false) { return; }
-
-        odometry.resetPosition(
-            Rotation2d.fromDegrees(gyroAngle), 
-            new SwerveModuleState[] {
-                fl.get
-            }, 
-            newPosition
-        );
+    /**
+     * Gets the position, according to odometry (wheel states)
+     * @return The position
+     */
+    public Pose2d getOdometricPosition() {
+        if (odometryPosition == null) {
+            DriverStation.reportWarning("Odometric position is null!", false);
+            return new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0));
+        }
+        return odometryPosition;
     }
 
     // Periodic
@@ -282,19 +273,11 @@ public class SwerveBase extends SubsystemBase {
             fr.periodic();
             rl.periodic();
             rr.periodic();
-
-            if (odometryRunning) {
-                odometryPosition = odometry.update(
-                    Rotation2d.fromDegrees(gyroAngle), 
-                    new SwerveModulePosition[] {
-                        fl.getState(),
-                        fr.getState(),
-                        rl.getState(),
-                        rr.getState()
-                    }
-                );
-            }
         }
+        odometryPosition = odometry.update(
+            Rotation2d.fromDegrees(gyroAngle), 
+            getSwerveModulePositions()
+        );
     }
 
     @Override
