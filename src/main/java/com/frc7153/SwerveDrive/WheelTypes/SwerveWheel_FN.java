@@ -165,7 +165,7 @@ public class SwerveWheel_FN implements SwerveWheel {
     @Override
     public SwerveModulePosition getState() {
         return new SwerveModulePosition(
-            SwerveMathUtils.falcon500VelocityToRPM(driveWheel.getSelectedSensorVelocity()) / k_DRIVE_RATIO * k_WHEEL_CIRCUMFERENCE / 60.0, 
+            SwerveMathUtils.falcon500PositionToRotations(driveWheel.getSelectedSensorPosition()) / k_DRIVE_RATIO * k_WHEEL_CIRCUMFERENCE,
             Rotation2d.fromDegrees(SwerveMathUtils.normalizeAngle360(getAngleFromRelative()))
         );
     }
